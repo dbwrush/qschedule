@@ -7,6 +7,33 @@
 
 function generateMatchSchedule(teams, rooms, matchesPerTeam, teamsPerRound) {
   let rawSchedule;
+
+  // Validate inputs
+  if (teams.length < 2) {
+    alert('At least 2 teams are required.');
+    return [];
+  }
+  if (rooms.length < 1) {
+    alert('At least 1 room is required.');
+    return [];
+  }
+  if (rooms > teams / teamsPerRound) {
+    alert('More rooms than needed. Recommend ~ ' + Math.ceil(teams / teamsPerRound) + ' rooms.');
+    return [];
+  }
+  //Check if any teams or rooms have duplicate names
+  const uniqueTeams = new Set(teams);
+  if (uniqueTeams.size !== teams.length) {
+    alert('Team names must be unique.');
+    return [];
+  }
+  const uniqueRooms = new Set(rooms);
+  if (uniqueRooms.size !== rooms.length) {
+    alert('Room names must be unique.');
+    return [];
+  }
+
+
   switch (teamsPerRound) {
     case 2:
       rawSchedule = generateTwoTeamSchedule(teams, rooms, matchesPerTeam);
