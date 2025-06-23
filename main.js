@@ -6,14 +6,36 @@
 */
 
 function generateMatchSchedule(teams, rooms, matchesPerTeam, teamsPerRound) {
+  let rawSchedule;
   switch (teamsPerRound) {
     case 2:
-      return generateTwoTeamSchedule(teams, rooms, matchesPerTeam);
+      rawSchedule = generateTwoTeamSchedule(teams, rooms, matchesPerTeam);
+      break;
     case 3:
-      return generateThreeTeamSchedule(teams, rooms, matchesPerTeam);
+      rawSchedule = generateThreeTeamSchedule(teams, rooms, matchesPerTeam);
+      break;
     default:
       throw new Error('Invalid number of teams per round. Must be 2 or 3.');
   }
+  // Reformat schedule to expected format: array of objects, each with room names as keys and array of teams as values
+  // Example: [{ Room 1: [A,B], Room 2: [C,D], ... }, ...]
+  const formatted = rawSchedule.map(roundArr => {
+    const roundObj = {};
+    for (const match of roundArr) {
+      // match: { room, teams }
+      if (match.room && match.teams) {
+        roundObj[match.room] = match.teams;
+      }
+    }
+    // Ensure all rooms are present (for display)
+    for (const room of rooms) {
+      if (!(room in roundObj)) {
+        roundObj[room] = [];
+      }
+    }
+    return roundObj;
+  });
+  return formatted;
 }
 
 function generateThreeTeamSchedule(teams, rooms, matchesPerTeam) {
