@@ -176,11 +176,12 @@ input[type="number"] {
   flex: 0;
 }
 
-.teams input:focus, .rooms input:focus, input[type="number"]:focus {
-  border: 1.5px solid var(--glow-color-1);
+.teams input:hover, .rooms input:hover, input[type="number"]:hover {
+  border: 1.5px solid var(--glow-color-2);
   outline: none;
   background: #22344a;
-  box-shadow: 0 0 8px var(--hover-glow), 0 0 12px var(--glow-color-1); 
+  box-shadow: 0 0 8px var(--hover-glow), 0 0 12px var(--glow-color-1);
+  transform: translateY(-1px);
 }
 
 button {
