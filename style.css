@@ -170,14 +170,6 @@ button:hover {
   transform: translateY(-2px);
 }
 
-#submit {
-  display: inline-block;
-  margin-right: 0;
-  width: 100%;
-  margin-top: 1.5em;
-  font-weight: bold;
-}
-
 table#schedule-table {
   padding: 0;
   width: 100%;
