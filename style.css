@@ -23,6 +23,44 @@
   -webkit-text-size-adjust: 100%;
 }
 
+/* Header styling */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(31, 31, 31, 0.8); /* Translucent background */
+  padding: 1rem 2rem;
+  border-bottom: 1px solid var(--tile-border);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(10px); /* Add a blur effect for a glassy look */
+}
+
+.header-left h1 {
+  margin: 0;
+  font-size: 1.5rem;
+  color: var(--text-color);
+}
+
+.header-right a {
+  margin-left: 1.5rem;
+  font-size: 1rem;
+  color: var(--glow-color-1);
+  text-decoration: none;
+  transition: color 0.3s ease, text-shadow 0.3s ease;
+}
+
+.header-right a:hover {
+  color: var(--glow-color-2);
+  text-shadow: 0 0 5px var(--hover-glow);
+}
+
+/* Hide header-right on small screens */
+@media (max-width: 500px) {
+  .header-right {
+    display: none;
+  }
+}
+
 body {
   font-family: inherit;
   background: var(--background-gradient);
@@ -33,10 +71,27 @@ body {
   min-height: 100vh;
 }
 
+main {
+  flex: 1; /* Allow the main content to expand and push the footer down */
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: calc(100vh - 57px - 89px); /* Ensure the main container fills the body */
+  box-sizing: border-box;
+}
+
 .container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); /* Default grid behavior */
+  gap: 1rem;
+  padding: 1rem;
+}
+
+.tile {
   background: var(--tile-background);
   max-width: 1600px;
-  margin: 2em auto;
+  margin: auto;
+  object-fit: content;
   padding: 2em 2.5em 2.5em 2.5em;
   border-radius: 18px;
   box-shadow: 0 4px 32px var(--hover-glow), 0 1.5px 0 var(--tile-border);
@@ -47,10 +102,6 @@ h1 {
   text-align: center;
   color: var(--text-color);
   margin-bottom: 1.5em;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  font-weight: bold;
-  text-shadow: 0 0 5px var(--glow-color-1), 0 0 2px var(--glow-color-3);
 }
 
 form label {
@@ -63,9 +114,10 @@ form label {
 }
 
 .teams, .rooms {
+  width: 100%;
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5em;
+  gap: 1rem;
   margin-bottom: 0.5em;
 }
 
@@ -189,4 +241,53 @@ table#schedule-table tr:last-child td {
   color: #fff;
   border: 1.5px solid var(--glow-color-3);
   box-shadow: 0 0 16px 2px var(--hover-glow);
+}
+
+.settings-row {
+  display: flex;
+  gap: 2em;
+  justify-content: center;
+  margin-bottom: 1.5em;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 600px) {
+  .settings-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1em;
+  }
+  .setting {
+    justify-content: flex-start;
+  }
+}
+
+.setting {
+  display: flex;
+  align-items: center;
+  gap: 0.7em;
+}
+
+.setting label {
+  margin: 0;
+  font-weight: 500;
+  color: var(--text-color);
+  letter-spacing: 1px;
+  font-weight: bold;
+  white-space: nowrap;
+}
+
+.setting input[type="number"] {
+  margin-bottom: 0;
+}
+
+/* Footer styling */
+.footer {
+  background: rgba(31, 31, 31, 0.8); /* Translucent background */
+  color: var(--text-color);
+  text-align: center;
+  padding: 1rem;
+  border-top: 1px solid var(--tile-border);
+  box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(10px); /* Add a blur effect for a glassy look */
 }
