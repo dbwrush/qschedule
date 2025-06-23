@@ -147,25 +147,28 @@ input[type="number"] {
 
 button {
   background: var(--button-background);
-  color: var(--glow-color-1);
-  border: 1.5px solid var(--glow-color-1);
-  border-radius: 7px;
+  color: var(--text-color);
+  border: 1px solid transparent;
+  border-radius: 8px;
   padding: 0.6em 1.2em;
   font-size: 1em;
-  margin-top: 0.7em;
-  margin-right: 0.5em;
-  cursor: pointer;
-  transition: background 0.2s, box-shadow 0.2s, color 0.2s, border 0.2s;
-  box-shadow: 0 2px 12px var(--hover-glow);
   font-weight: 500;
+  font-family: inherit;
   letter-spacing: 1px;
+  box-shadow: 0 0 4px rgba(0, 0, 0, 0.5);
+  margin: 0.5rem 0;
+  width: 100%;
+  box-sizing: border-box;
+  cursor: pointer;
+  transition: box-shadow 0.3s ease, transform 0.3s ease, background 0.2s, color 0.2s, border 0.2s;
 }
 
 button:hover {
+  box-shadow: 0 0 6px var(--hover-glow), 0 0 10px var(--glow-color-1);
   background: var(--hover-glow);
   color: #fff;
-  border: 1.5px solid var(--glow-color-2);
-  box-shadow: 0 0 16px 2px var(--hover-glow);
+  border: 1px solid var(--glow-color-2);
+  transform: translateY(-2px);
 }
 
 #submit {
@@ -177,14 +180,14 @@ button:hover {
 }
 
 table#schedule-table {
+  padding: 0;
   width: 100%;
-  border-collapse: collapse;
   margin-top: 2em;
-  background: var(--tile-background);
+  background: var(--tile-border);
   border-radius: 12px;
   overflow: hidden;
   box-shadow: 0 2px 16px var(--hover-glow);
-  border: 1.5px solid var(--tile-border);
+  border: 1.5px solid inset var(--tile-border);
   color: var(--text-color);
 }
 
@@ -197,6 +200,8 @@ table#schedule-table th, table#schedule-table td {
   overflow: hidden;
   text-overflow: ellipsis;
   word-break: break-word;
+  border: none;
+  margin: 0;
 }
 
 table#schedule-table th {
@@ -205,6 +210,24 @@ table#schedule-table th {
   font-weight: 600;
   letter-spacing: 1px;
   text-shadow: 0 0 6px var(--hover-glow);
+  border: none;
+  margin: 0;
+}
+
+table#schedule-table th:first-child {
+  border-top-left-radius: 10px;
+}
+
+table#schedule-table th:last-child {
+  border-top-right-radius: 10px;
+}
+
+#schedule-table > tbody > tr:last-child > td:first-child {
+  border-bottom-left-radius: 10px;
+}
+
+#schedule-table > tbody > tr:last-child > td:last-child {
+  border-bottom-right-radius: 10px;
 }
 
 table#schedule-table td {
@@ -214,8 +237,7 @@ table#schedule-table td {
 }
 
 table#schedule-table tr:nth-child(even) td {
-  background: var(--tile-border);
-  background: transparent;
+  background: var(--tile-background);
 }
 
 table#schedule-table th:first-child, table#schedule-table td:first-child {
@@ -239,10 +261,10 @@ table#schedule-table tr:last-child td {
   margin: 1.5em 0 0 0;
   font-size: 1.1em;
   background: var(--button-background);
-  color: var(--glow-color-1);
+  color: var(--text-color);
   border-radius: 7px;
   padding: 0.7em 0;
-  border: 1.5px solid var(--glow-color-1);
+  border: 1px solid transparent;
   box-shadow: 0 2px 8px var(--hover-glow);
   font-weight: 600;
   letter-spacing: 1px;
@@ -250,9 +272,9 @@ table#schedule-table tr:last-child td {
 }
 
 #download-csv:hover {
-  background: var(--glow-color-2);
+  background: var(--hover-glow);
   color: #fff;
-  border: 1.5px solid var(--glow-color-3);
+  border: 1.5px solid var(--glow-color-2);
   box-shadow: 0 0 16px 2px var(--hover-glow);
 }
 
