@@ -39,7 +39,7 @@ form label {
 
 .teams input, .rooms input, input[type="number"] {
   padding: 0.5em 0.8em;
-  border: 1px solid #3d425c;
+  border: 1px solid #b6bcda;
   border-radius: 6px;
   font-size: 1em;
   margin-bottom: 0.5em;
