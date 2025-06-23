@@ -97,7 +97,13 @@ function generateThreeTeamSchedule(teams, rooms, matchesPerTeam) {
       let t1 = arr[(g * 3) % numTeams];
       let t2 = arr[(g * 3 + 1) % numTeams];
       let t3 = arr[(g * 3 + 2) % numTeams];
-      round.push([t1, t2, t3]);
+      // Shuffle team order within the group
+      let group = [t1, t2, t3];
+      for (let s = group.length - 1; s > 0; s--) {
+        const j = Math.floor(Math.random() * (s + 1));
+        [group[s], group[j]] = [group[j], group[s]];
+      }
+      round.push(group);
     }
     baseRounds.push(round);
     // Rotate: keep first team fixed, rotate the rest
@@ -196,13 +202,18 @@ function generateTwoTeamSchedule(teams, rooms, matchesPerTeam) {
     let round = [];
     for (let i = 0; i < matches.length; i++) {
       let [t1, t2] = matches[i];
+      // Shuffle team order within the match
+      let match = [t1, t2];
+      if (Math.random() < 0.5) {
+        match = [t2, t1];
+      }
       let room = roomOrder[i % rooms.length] || 'Bye';
-      if (t1 === 'Bye') {
-        round.push({ room: 'Bye', teams: [t2] });
-      } else if (t2 === 'Bye') {
-        round.push({ room: 'Bye', teams: [t1] });
+      if (match[0] === 'Bye') {
+        round.push({ room: 'Bye', teams: [match[1]] });
+      } else if (match[1] === 'Bye') {
+        round.push({ room: 'Bye', teams: [match[0]] });
       } else {
-        round.push({ room, teams: [t1, t2] });
+        round.push({ room, teams: match });
       }
     }
     rounds.push(round);
