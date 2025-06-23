@@ -295,6 +295,9 @@ function displaySchedule(schedule, rooms) {
 
 function addCSVDownload(schedule, rooms) {
   // Remove old button if exists
+  const csvDiv = document.getElementById('csv');
+  if (!csvDiv) return;
+  csvDiv.innerHTML = '';
   const oldBtn = document.getElementById('download-csv');
   if (oldBtn) oldBtn.remove();
 
@@ -317,20 +320,20 @@ function addCSVDownload(schedule, rooms) {
   btn.id = 'download-csv';
   btn.textContent = 'Download CSV';
   btn.style.marginTop = '1em';
-  btn.addEventListener('click', () => {
+  btn.addEventListener('click', (e) => {
+    e.preventDefault();
     const blob = new Blob([csvContent], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
     a.download = 'schedule.csv';
-    document.body.appendChild(a);
+    csvDiv.appendChild(a);
     a.click();
     setTimeout(() => {
-      document.body.removeChild(a);
+      csvDiv.removeChild(a);
       URL.revokeObjectURL(url);
     }, 0);
   });
 
-  const container = document.querySelector('.container');
-  container.appendChild(btn);
+  csvDiv.appendChild(btn);
 }

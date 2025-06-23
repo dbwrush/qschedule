@@ -81,10 +81,9 @@ main {
 }
 
 .container {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); /* Default grid behavior */
-  gap: 1rem;
+  display: flex;
   padding: 1rem;
+
 }
 
 .tile {
@@ -131,6 +130,12 @@ form label {
   color: var(--text-color);
   transition: border 0.2s, background 0.2s, box-shadow 0.2s;
   box-shadow: 0 0 0 0 var(--glow-color-1);
+  flex: 1 1;
+}
+
+input[type="number"] {
+  max-width: 100px;
+  flex: 0;
 }
 
 .teams input:focus, .rooms input:focus, input[type="number"]:focus {
@@ -161,6 +166,14 @@ button:hover {
   color: #fff;
   border: 1.5px solid var(--glow-color-2);
   box-shadow: 0 0 16px 2px var(--hover-glow);
+}
+
+#submit {
+  display: inline-block;
+  margin-right: 0;
+  width: 100%;
+  margin-top: 1.5em;
+  font-weight: bold;
 }
 
 table#schedule-table {
@@ -290,4 +303,8 @@ table#schedule-table tr:last-child td {
   border-top: 1px solid var(--tile-border);
   box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.5);
   backdrop-filter: blur(10px); /* Add a blur effect for a glassy look */
+}
+
+.footer a {
+    color: #3b82f6;
 }
