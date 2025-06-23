@@ -180,7 +180,7 @@ input[type="number"] {
   border: 1.5px solid var(--glow-color-1);
   outline: none;
   background: #22344a;
-  box-shadow: 0 0 8px 1px var(--hover-glow);
+  box-shadow: 0 0 8px var(--hover-glow), 0 0 12px var(--glow-color-1); 
 }
 
 button {
@@ -203,18 +203,9 @@ button {
 
 button:hover {
   box-shadow: 0 0 6px var(--hover-glow), 0 0 10px var(--glow-color-1);
-  background: var(--hover-glow);
   color: #fff;
   border: 1px solid var(--glow-color-2);
   transform: translateY(-2px);
-}
-
-#submit {
-  display: inline-block;
-  margin-right: 0;
-  width: 100%;
-  margin-top: 1.5em;
-  font-weight: bold;
 }
 
 table#schedule-table {
@@ -291,29 +282,6 @@ table#schedule-table td:first-child {
 
 table#schedule-table tr:last-child td {
   border-bottom: none;
-}
-
-#download-csv {
-  display: block;
-  width: 100%;
-  margin: 1.5em 0 0 0;
-  font-size: 1.1em;
-  background: var(--button-background);
-  color: var(--text-color);
-  border-radius: 7px;
-  padding: 0.7em 0;
-  border: 1px solid transparent;
-  box-shadow: 0 2px 8px var(--hover-glow);
-  font-weight: 600;
-  letter-spacing: 1px;
-  transition: background 0.2s, color 0.2s, border 0.2s, box-shadow 0.2s;
-}
-
-#download-csv:hover {
-  background: var(--hover-glow);
-  color: #fff;
-  border: 1.5px solid var(--glow-color-2);
-  box-shadow: 0 0 16px 2px var(--hover-glow);
 }
 
 .settings-row {
