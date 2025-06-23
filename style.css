@@ -1,33 +1,65 @@
+:root {
+  --background-gradient: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+  --glow-color-1: #24c8db;
+  --glow-color-2: #1dd1a1;
+  --glow-color-3: #3b82f6;
+  --text-color: #fff;
+  --tile-background: rgba(31, 31, 31, 0.8);
+  --tile-border: #2c5364;
+  --hover-glow: rgba(36, 200, 219, 0.3);
+  --button-background: #1a2b3c;
+  --input-background: #1a2b3c;
+  --table-header-bg: #16202a;
+  --table-row-bg: #23283a;
+  --table-row-alt-bg: #293447;
+  font-family: Inter, Avenir, Helvetica, Arial, sans-serif;
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 400;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-text-size-adjust: 100%;
+}
+
 body {
-  font-family: 'Segoe UI', Arial, sans-serif;
-  background: linear-gradient(135deg, #181c24 0%, #23283a 100%);
+  font-family: inherit;
+  background: var(--background-gradient);
+  background-position: fixed;
   margin: 0;
   padding: 0;
+  color: var(--text-color);
+  min-height: 100vh;
 }
 
 .container {
-  background: #23283a;
+  background: var(--tile-background);
   max-width: 1600px;
   margin: 2em auto;
   padding: 2em 2.5em 2.5em 2.5em;
-  border-radius: 16px;
-  box-shadow: 0 4px 32px rgba(0,0,0,0.35);
+  border-radius: 18px;
+  box-shadow: 0 4px 32px var(--hover-glow), 0 1.5px 0 var(--tile-border);
+  border: 1.5px solid var(--tile-border);
 }
 
 h1 {
   text-align: center;
-  color: #f7b731;
+  color: var(--text-color);
   margin-bottom: 1.5em;
   letter-spacing: 2px;
   text-transform: uppercase;
   font-weight: bold;
+  text-shadow: 0 0 5px var(--glow-color-1), 0 0 2px var(--glow-color-3);
 }
 
 form label {
   display: block;
   margin-top: 1.2em;
   font-weight: 500;
-  color: #f7b731;
+  color: var(--text-color);
+  letter-spacing: 1px;
+  font-weight: bold;
 }
 
 .teams, .rooms {
@@ -39,54 +71,62 @@ form label {
 
 .teams input, .rooms input, input[type="number"] {
   padding: 0.5em 0.8em;
-  border: 1px solid #b6bcda;
-  border-radius: 6px;
+  border: 1.5px solid var(--tile-border);
+  border-radius: 7px;
   font-size: 1em;
   margin-bottom: 0.5em;
-  background: #23283a;
-  color: #f7f1e3;
-  transition: border 0.2s, background 0.2s;
+  background: var(--input-background);
+  color: var(--text-color);
+  transition: border 0.2s, background 0.2s, box-shadow 0.2s;
+  box-shadow: 0 0 0 0 var(--glow-color-1);
 }
 
 .teams input:focus, .rooms input:focus, input[type="number"]:focus {
-  border: 1.5px solid #f7b731;
+  border: 1.5px solid var(--glow-color-1);
   outline: none;
-  background: #2d3250;
+  background: #22344a;
+  box-shadow: 0 0 8px 1px var(--hover-glow);
 }
 
 button {
-  background: linear-gradient(90deg, #43cea2 0%, #185a9d 100%);
-  color: #fff;
-  border: none;
-  border-radius: 6px;
+  background: var(--button-background);
+  color: var(--glow-color-1);
+  border: 1.5px solid var(--glow-color-1);
+  border-radius: 7px;
   padding: 0.6em 1.2em;
   font-size: 1em;
   margin-top: 0.7em;
   margin-right: 0.5em;
   cursor: pointer;
-  transition: background 0.2s, box-shadow 0.2s;
-  box-shadow: 0 2px 8px rgba(67,206,162,0.15);
+  transition: background 0.2s, box-shadow 0.2s, color 0.2s, border 0.2s;
+  box-shadow: 0 2px 12px var(--hover-glow);
+  font-weight: 500;
+  letter-spacing: 1px;
 }
 
 button:hover {
-  background: linear-gradient(90deg, #f7b731 0%, #185a9d 100%);
+  background: var(--hover-glow);
   color: #fff;
+  border: 1.5px solid var(--glow-color-2);
+  box-shadow: 0 0 16px 2px var(--hover-glow);
 }
 
 table#schedule-table {
   width: 100%;
   border-collapse: collapse;
   margin-top: 2em;
-  background: #23283a;
-  border-radius: 10px;
+  background: var(--tile-background);
+  border-radius: 12px;
   overflow: hidden;
-  box-shadow: 0 2px 16px rgba(0,0,0,0.18);
+  box-shadow: 0 2px 16px var(--hover-glow);
+  border: 1.5px solid var(--tile-border);
+  color: var(--text-color);
 }
 
 table#schedule-table th, table#schedule-table td {
   padding: 0.7em 0.5em;
   text-align: center;
-  border-bottom: 1px solid #353b4d;
+  border-bottom: 1px solid var(--tile-border);
   white-space: nowrap;
   max-width: 100px;
   overflow: hidden;
@@ -94,22 +134,34 @@ table#schedule-table th, table#schedule-table td {
   word-break: break-word;
 }
 
+table#schedule-table th {
+  background: var(--glow-color-3);
+  color: var(--text-color);
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-shadow: 0 0 6px var(--hover-glow);
+}
+
 table#schedule-table td {
   font-weight: 500;
-  color: #f7f1e3;
+  color: var(--text-color);
+  background: var(--table-row-bg);
+}
+
+table#schedule-table tr:nth-child(even) td {
+  background: var(--tile-border);
+  background: transparent;
 }
 
 table#schedule-table th:first-child, table#schedule-table td:first-child {
   font-weight: 700;
-  color: #f7b731;
-  background: #2d3250;
+  color: var(--glow-color-1);
+  color: var(--text-color);
+  /* background: var(--button-background); */
 }
 
-table#schedule-table th {
-  background: linear-gradient(90deg, #43cea2 0%, #185a9d 100%);
-  color: #fff;
-  font-weight: 600;
-  letter-spacing: 1px;
+table#schedule-table td:first-child {
+    background: var(--button-background);
 }
 
 table#schedule-table tr:last-child td {
@@ -121,15 +173,20 @@ table#schedule-table tr:last-child td {
   width: 100%;
   margin: 1.5em 0 0 0;
   font-size: 1.1em;
-  background: linear-gradient(90deg, #43cea2 0%, #185a9d 100%);
-  color: #fff;
-  border-radius: 6px;
+  background: var(--button-background);
+  color: var(--glow-color-1);
+  border-radius: 7px;
   padding: 0.7em 0;
-  border: none;
-  box-shadow: 0 2px 8px rgba(67,206,162,0.15);
+  border: 1.5px solid var(--glow-color-1);
+  box-shadow: 0 2px 8px var(--hover-glow);
+  font-weight: 600;
+  letter-spacing: 1px;
+  transition: background 0.2s, color 0.2s, border 0.2s, box-shadow 0.2s;
 }
 
 #download-csv:hover {
-  background: linear-gradient(90deg, #f7b731 0%, #185a9d 100%);
+  background: var(--glow-color-2);
   color: #fff;
+  border: 1.5px solid var(--glow-color-3);
+  box-shadow: 0 0 16px 2px var(--hover-glow);
 }
