@@ -128,3 +128,99 @@ const teamsPerRound = 3;
 
 const schedule = generateMatchSchedule(teams, rooms, matchesPerTeam, teamsPerRound);
 console.log(JSON.stringify(schedule, null, 2));
+
+// Implement frontend to display the schedule using input
+
+document.addEventListener('DOMContentLoaded', () => {
+  // Add Team button functionality
+  document.getElementById('add-team').addEventListener('click', (e) => {
+    e.preventDefault();
+    const teamsDiv = document.querySelector('.teams');
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.id = 'team';
+    input.name = 'teams';
+    input.placeholder = 'Team Name';
+    input.required = true;
+    teamsDiv.appendChild(input);
+  });
+
+  // Add Room button functionality
+  document.getElementById('add-room').addEventListener('click', (e) => {
+    e.preventDefault();
+    const roomsDiv = document.querySelector('.rooms');
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.id = 'room';
+    input.name = 'rooms';
+    input.placeholder = 'Room Name';
+    input.required = true;
+    roomsDiv.appendChild(input);
+  });
+
+  // Handle form submission
+  document.querySelector('form').addEventListener('submit', (e) => {
+    e.preventDefault();
+    // Get all team names
+    const teamInputs = document.querySelectorAll('input[name="teams"]');
+    const teams = Array.from(teamInputs).map(input => input.value.trim()).filter(Boolean);
+    // Get all room names
+    const roomInputs = document.querySelectorAll('input[name="rooms"]');
+    const rooms = Array.from(roomInputs).map(input => input.value.trim()).filter(Boolean);
+    // Get matches per team
+    const matchesPerTeam = parseInt(document.getElementById('matches').value, 10);
+    // Get teams per round
+    const teamsPerRound = parseInt(document.getElementById('tpr').value, 10);
+
+    // Generate schedule
+    const schedule = generateMatchSchedule(teams, rooms, matchesPerTeam, teamsPerRound);
+
+    // Display schedule as HTML table
+    displaySchedule(schedule, rooms);
+  });
+});
+
+function displaySchedule(schedule, rooms) {
+  // Remove old table if exists
+  const oldTable = document.getElementById('schedule-table');
+  if (oldTable) oldTable.remove();
+
+  const container = document.querySelector('.container');
+  const table = document.createElement('table');
+  table.id = 'schedule-table';
+  table.style.marginTop = '2em';
+  table.border = '1';
+
+  // Table header
+  const thead = document.createElement('thead');
+  const headerRow = document.createElement('tr');
+  const roundHeader = document.createElement('th');
+  roundHeader.textContent = 'Round';
+  headerRow.appendChild(roundHeader);
+  rooms.forEach(room => {
+    const th = document.createElement('th');
+    th.textContent = room;
+    headerRow.appendChild(th);
+  });
+  thead.appendChild(headerRow);
+  table.appendChild(thead);
+
+  // Table body
+  const tbody = document.createElement('tbody');
+  schedule.forEach((round, i) => {
+    const row = document.createElement('tr');
+    const roundCell = document.createElement('td');
+    roundCell.textContent = `Round ${i + 1}`;
+    row.appendChild(roundCell);
+    rooms.forEach(room => {
+      const cell = document.createElement('td');
+      const match = round[room];
+      cell.textContent = (match && match.length) ? match.join(' vs ') : '-';
+      row.appendChild(cell);
+    });
+    tbody.appendChild(row);
+  });
+  table.appendChild(tbody);
+
+  container.appendChild(table);
+}

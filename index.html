@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scheduler</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="main.js" defer></script>
+</head>
+<body>
+    <div class="container">
+        <h1>Scheduler</h1>
+        <form action="">
+            <label for="teams">Add a team:</label>
+            <div class="teams">
+                <input type="text" id="team" name="teams" placeholder="Team Name" required="true">
+                <input type="text" id="team" name="teams" placeholder="Team Name" required="true">
+            </div>
+            <button id="add-team">Add Team</button>
+
+            <label for="rooms">Add a room:</label>
+            <div class="rooms">
+                <input type="text" id="room" name="rooms" placeholder="Room Name" required="true">
+            </div>
+            <button id="add-room">Add Room</button>
+
+            <label for="matches">Matches per Team</label>
+            <input type="number" id="matches" name="matches" min="1" max="100" value="1" required="true">
+
+            <label for="tpr">Teams per Round</label>
+            <input type="number" id="tpr" name="tpr" min="2" max="3" value="2" required="true">
+
+            <button type="submit" id="submit">Generate Schedule</button>
+        </form>
+    </div>
+</body>
+</html>
