@@ -6,114 +6,156 @@
 */
 
 function generateMatchSchedule(teams, rooms, matchesPerTeam, teamsPerRound) {
+  switch (teamsPerRound) {
+    case 2:
+      return generateTwoTeamSchedule(teams, rooms, matchesPerTeam);
+    case 3:
+      return generateThreeTeamSchedule(teams, rooms, matchesPerTeam);
+    default:
+      throw new Error('Invalid number of teams per round. Must be 2 or 3.');
+  }
+}
+
+function generateThreeTeamSchedule(teams, rooms, matchesPerTeam) {
+  let numTeams = teams.length;
+  let teamsList = [...teams];
+  // Add byes if needed to make the number of teams divisible by 3
+  let numByes = (3 - (numTeams % 3)) % 3;
+  for (let i = 0; i < numByes; i++) {
+    teamsList.push('Bye');
+  }
+  numTeams = teamsList.length;
   const rounds = [];
-  const matchCounts = new Map(); // key: "Team A-Team B", value: number of matches
+  const numGroups = numTeams / 3;
+  const numRounds = (numTeams - 1) * matchesPerTeam / 2; // Each round: every team appears once
 
-  const getPairKey = (a, b) => [a, b].sort().join("-");
-
-  // Initialize pair match counts
-  for (let i = 0; i < teams.length; i++) {
-    for (let j = i + 1; j < teams.length; j++) {
-      matchCounts.set(getPairKey(teams[i], teams[j]), 0);
+  // Helper to shuffle room assignments
+  function shuffle(arr) {
+    let a = arr.slice();
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
     }
+    return a;
   }
 
-  const getUnfilledPairs = () => {
-    return Array.from(matchCounts.entries())
-      .filter(([_, count]) => count < matchesPerTeam)
-      .map(([key]) => key.split("-"));
-  };
-
-  const scheduleMatch = (match) => {
-    for (let i = 0; i < match.length; i++) {
-      for (let j = i + 1; j < match.length; j++) {
-        const key = getPairKey(match[i], match[j]);
-        matchCounts.set(key, matchCounts.get(key) + 1);
-      }
+  // Generate base triangular rounds using rotation
+  let baseRounds = [];
+  let arr = teamsList.slice();
+  for (let r = 0; r < numTeams - 1; r++) {
+    let round = [];
+    for (let g = 0; g < numGroups; g++) {
+      let t1 = arr[(g * 3) % numTeams];
+      let t2 = arr[(g * 3 + 1) % numTeams];
+      let t3 = arr[(g * 3 + 2) % numTeams];
+      round.push([t1, t2, t3]);
     }
-  };
+    baseRounds.push(round);
+    // Rotate: keep first team fixed, rotate the rest
+    arr = [arr[0]].concat(arr.slice(1).slice(-1)).concat(arr.slice(1, -1));
+  }
 
-  const shuffle = (array) => {
-    for (let i = array.length - 1; i > 0; i--) {
+  // Repeat base rounds matchesPerTeam times, shuffling order each time
+  let allRounds = [];
+  for (let m = 0; m < matchesPerTeam; m++) {
+    let copy = baseRounds.map(round => round.slice());
+    // Shuffle the order of rounds for variety
+    for (let i = copy.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
-      [array[i], array[j]] = [array[j], array[i]];
+      [copy[i], copy[j]] = [copy[j], copy[i]];
     }
-  };
+    allRounds = allRounds.concat(copy);
+  }
 
-  while (getUnfilledPairs().length > 0) {
-    const round = {};
-    const usedTeams = new Set();
-
-    // Shuffle the team order to vary starting positions each round
-    const shuffledTeams = [...teams];
-    shuffle(shuffledTeams);
-
-    const candidates = getUnfilledPairs().filter(
-      ([a, b]) => !usedTeams.has(a) && !usedTeams.has(b)
-    );
-
-    for (const room of rooms) {
-      let match = null;
-
-      // Try 3-team match
-      if (teamsPerRound === 3) {
-        for (let i = 0; i < shuffledTeams.length; i++) {
-          const a = shuffledTeams[i];
-          if (usedTeams.has(a)) continue;
-
-          for (let j = i + 1; j < shuffledTeams.length; j++) {
-            const b = shuffledTeams[j];
-            if (usedTeams.has(b) || matchCounts.get(getPairKey(a, b)) >= matchesPerTeam) continue;
-
-            for (let k = j + 1; k < shuffledTeams.length; k++) {
-              const c = shuffledTeams[k];
-              if (usedTeams.has(c)) continue;
-
-              const ab = matchCounts.get(getPairKey(a, b)) ?? 0;
-              const ac = matchCounts.get(getPairKey(a, c)) ?? 0;
-              const bc = matchCounts.get(getPairKey(b, c)) ?? 0;
-
-              if (ab < matchesPerTeam && ac < matchesPerTeam && bc < matchesPerTeam) {
-                match = [a, b, c];
-                break;
-              }
-            }
-            if (match) break;
-          }
-          if (match) break;
-        }
+  // Assign groups to rooms per round
+  for (let r = 0; r < allRounds.length; r++) {
+    let groups = allRounds[r];
+    let roomOrder = shuffle(rooms.concat());
+    let round = [];
+    for (let i = 0; i < groups.length; i++) {
+      let group = groups[i];
+      let room = roomOrder[i % rooms.length] || 'Bye';
+      let realTeams = group.filter(t => t !== 'Bye');
+      if (realTeams.length === 1) {
+        round.push({ room: 'Bye', teams: realTeams });
+      } else if (realTeams.length === 2) {
+        round.push({ room, teams: realTeams });
+      } else if (realTeams.length === 3) {
+        round.push({ room, teams: realTeams });
       }
+      // If all are 'Bye', skip
+    }
+    rounds.push(round);
+  }
 
-      // Fallback to 2-team match
-      if (!match) {
-        for (let i = 0; i < shuffledTeams.length; i++) {
-          const a = shuffledTeams[i];
-          if (usedTeams.has(a)) continue;
+  return rounds;
+}
 
-          for (let j = i + 1; j < shuffledTeams.length; j++) {
-            const b = shuffledTeams[j];
-            if (
-              usedTeams.has(b) ||
-              matchCounts.get(getPairKey(a, b)) >= matchesPerTeam
-            ) continue;
+function generateTwoTeamSchedule(teams, rooms, matchesPerTeam) {
+  let numTeams = teams.length;
+  let isOdd = numTeams % 2 !== 0;
+  let teamsList = [...teams];
+  if (isOdd) {
+    teamsList.push('Bye');
+    numTeams++;
+  }
+  const rounds = [];
+  const numRounds = (numTeams - 1) * matchesPerTeam;
+  const half = numTeams / 2;
 
-            match = [a, b];
-            break;
-          }
+  // For shuffling room assignments per round
+  function shuffle(arr) {
+    let a = arr.slice();
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
 
-          if (match) break;
-        }
-      }
+  // Generate base round-robin for one cycle
+  let baseRounds = [];
+  let arr = teamsList.slice();
+  for (let r = 0; r < numTeams - 1; r++) {
+    let matches = [];
+    for (let i = 0; i < half; i++) {
+      let t1 = arr[i];
+      let t2 = arr[numTeams - 1 - i];
+      matches.push([t1, t2]);
+    }
+    baseRounds.push(matches);
+    // Rotate except first team
+    arr = [arr[0]].concat([arr[numTeams - 1]].concat(arr.slice(1, numTeams - 1)));
+  }
 
-      if (match) {
-        match.forEach((team) => usedTeams.add(team));
-        scheduleMatch(match);
-        round[room] = match;
+  // Repeat base rounds matchesPerTeam times, shuffling order each time
+  let allRounds = [];
+  for (let m = 0; m < matchesPerTeam; m++) {
+    let copy = baseRounds.map(round => round.slice());
+    // Shuffle the order of rounds for variety
+    for (let i = copy.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [copy[i], copy[j]] = [copy[j], copy[i]];
+    }
+    allRounds = allRounds.concat(copy);
+  }
+
+  // Assign matches to rooms per round
+  for (let r = 0; r < allRounds.length; r++) {
+    let matches = allRounds[r];
+    let roomOrder = shuffle(rooms.concat());
+    let round = [];
+    for (let i = 0; i < matches.length; i++) {
+      let [t1, t2] = matches[i];
+      let room = roomOrder[i % rooms.length] || 'Bye';
+      if (t1 === 'Bye') {
+        round.push({ room: 'Bye', teams: [t2] });
+      } else if (t2 === 'Bye') {
+        round.push({ room: 'Bye', teams: [t1] });
       } else {
-        round[room] = []; // empty room
+        round.push({ room, teams: [t1, t2] });
       }
     }
-
     rounds.push(round);
   }
 
@@ -121,13 +163,14 @@ function generateMatchSchedule(teams, rooms, matchesPerTeam, teamsPerRound) {
 }
 
 // Example usage
-// const teams = ['Team A', 'Team B', 'Team C', 'Team D', 'Team E', 'Team F'];
-// const rooms = ['Room 1', 'Room 2', 'Room 3'];
-// const matchesPerTeam = 2;
-// const teamsPerRound = 3;
+/*
+ const teams = ['Team A', 'Team B', 'Team C', 'Team D', 'Team E', 'Team F'];
+ const rooms = ['Room 1', 'Room 2', 'Room 3'];
+ const matchesPerTeam = 2;
+ const teamsPerRound = 3;
 
-// const schedule = generateMatchSchedule(teams, rooms, matchesPerTeam, teamsPerRound);
-// console.log(JSON.stringify(schedule, null, 2));
+ const schedule = generateMatchSchedule(teams, rooms, matchesPerTeam, teamsPerRound);
+ console.log(JSON.stringify(schedule, null, 2));*/
 
 // Implement frontend to display the schedule using input
 document.addEventListener('DOMContentLoaded', () => {
@@ -173,6 +216,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Generate schedule
     const schedule = generateMatchSchedule(teams, rooms, matchesPerTeam, teamsPerRound);
+
+    console.log(JSON.stringify(schedule, null, 2)); // For debugging
 
     // Display schedule as HTML table
     displaySchedule(schedule, rooms);
