@@ -121,16 +121,15 @@ function generateMatchSchedule(teams, rooms, matchesPerTeam, teamsPerRound) {
 }
 
 // Example usage
-const teams = ['Team A', 'Team B', 'Team C', 'Team D', 'Team E', 'Team F'];
-const rooms = ['Room 1', 'Room 2', 'Room 3'];
-const matchesPerTeam = 2;
-const teamsPerRound = 3;
+// const teams = ['Team A', 'Team B', 'Team C', 'Team D', 'Team E', 'Team F'];
+// const rooms = ['Room 1', 'Room 2', 'Room 3'];
+// const matchesPerTeam = 2;
+// const teamsPerRound = 3;
 
-const schedule = generateMatchSchedule(teams, rooms, matchesPerTeam, teamsPerRound);
-console.log(JSON.stringify(schedule, null, 2));
+// const schedule = generateMatchSchedule(teams, rooms, matchesPerTeam, teamsPerRound);
+// console.log(JSON.stringify(schedule, null, 2));
 
 // Implement frontend to display the schedule using input
-
 document.addEventListener('DOMContentLoaded', () => {
   // Add Team button functionality
   document.getElementById('add-team').addEventListener('click', (e) => {
@@ -177,6 +176,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Display schedule as HTML table
     displaySchedule(schedule, rooms);
+    // Add CSV download button
+    addCSVDownload(schedule, rooms);
   });
 });
 
@@ -223,4 +224,46 @@ function displaySchedule(schedule, rooms) {
   table.appendChild(tbody);
 
   container.appendChild(table);
+}
+
+function addCSVDownload(schedule, rooms) {
+  // Remove old button if exists
+  const oldBtn = document.getElementById('download-csv');
+  if (oldBtn) oldBtn.remove();
+
+  // Build CSV content
+  let csv = ['Round,' + rooms.join(',')];
+  schedule.forEach((round, i) => {
+    const row = [
+      `Round ${i + 1}`,
+      ...rooms.map(room => {
+        const match = round[room];
+        return (match && match.length) ? match.join(' vs ') : '-';
+      })
+    ];
+    csv.push(row.join(','));
+  });
+  const csvContent = csv.join('\r\n');
+
+  // Create download button
+  const btn = document.createElement('button');
+  btn.id = 'download-csv';
+  btn.textContent = 'Download CSV';
+  btn.style.marginTop = '1em';
+  btn.addEventListener('click', () => {
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'schedule.csv';
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => {
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }, 0);
+  });
+
+  const container = document.querySelector('.container');
+  container.appendChild(btn);
 }
