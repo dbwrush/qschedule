@@ -142,7 +142,7 @@ input[type="number"] {
   border: 1.5px solid var(--glow-color-1);
   outline: none;
   background: #22344a;
-  box-shadow: 0 0 8px 1px var(--hover-glow);
+  box-shadow: 0 0 8px var(--hover-glow), 0 0 12px var(--glow-color-1); 
 }
 
 button {
@@ -165,7 +165,6 @@ button {
 
 button:hover {
   box-shadow: 0 0 6px var(--hover-glow), 0 0 10px var(--glow-color-1);
-  background: var(--hover-glow);
   color: #fff;
   border: 1px solid var(--glow-color-2);
   transform: translateY(-2px);
@@ -272,10 +271,9 @@ table#schedule-table tr:last-child td {
 }
 
 #download-csv:hover {
-  background: var(--hover-glow);
   color: #fff;
   border: 1.5px solid var(--glow-color-2);
-  box-shadow: 0 0 16px 2px var(--hover-glow);
+  box-shadow: 0 0 8px var(--hover-glow), 0 0 12px var(--glow-color-1); 
 }
 
 .settings-row {
