@@ -23,6 +23,33 @@
   -webkit-text-size-adjust: 100%;
 }
 
+/* html, body {
+  height: 100%;
+} */
+
+body {
+  min-height: calc(100vh - 24px - 89px); /* Ensure body takes full height minus header */
+  display: flex;
+  flex-direction: column;
+  font-family: inherit;
+  background: var(--background-gradient);
+  background-position: fixed;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  background-size: cover;
+  margin: 0;
+  color: var(--text-color);
+  padding: 0px 10px;
+  overflow-x: hidden; /* Prevent scrollbars from appearing */
+}
+
+main {
+  flex: 1 0 auto;
+  display: flex;
+  flex-direction: column;
+  margin-top: 50px;
+}
+
 /* Header styling */
 .header {
   display: flex;
@@ -33,6 +60,11 @@
   border-bottom: 1px solid var(--tile-border);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
   backdrop-filter: blur(10px); /* Add a blur effect for a glassy look */
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: calc(100% - 4rem);
+  z-index: 1000; /* Ensure header is above other content */
 }
 
 .header-left h1 {
@@ -65,17 +97,23 @@ body {
   font-family: inherit;
   background: var(--background-gradient);
   background-position: fixed;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  background-size: cover;
   margin: 0;
-  padding: 0;
   color: var(--text-color);
   min-height: 100vh;
+  position: relative;
+  top: 0;
+  padding: 0px 10px 0px 10px;
 }
 
 main {
   flex: 1; /* Allow the main content to expand and push the footer down */
   display: flex;
   flex-direction: column;
-  height: 100%;
+  min-height: 100%;
+  height: auto;
   min-height: calc(100vh - 57px - 89px); /* Ensure the main container fills the body */
   box-sizing: border-box;
 }
@@ -293,6 +331,12 @@ table#schedule-table tr:last-child td {
   border-top: 1px solid var(--tile-border);
   box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.5);
   backdrop-filter: blur(10px); /* Add a blur effect for a glassy look */
+  width: calc(100vw - 20px);
+  position: static;
+  left: 0;
+  bottom: 0;
+  margin-top: auto;
+  transform: translateX(-10px);
 }
 
 .footer a {
