@@ -82,9 +82,11 @@ function generateTwoTeamSchedule(teams, rooms, matchesPerTeam) {
   // First, calculate number of 'bye' teams needed. If odd, we need at least one. If we have insufficient rooms, we will need more.
   const numTeams = teams.length;
   const numRooms = rooms.length;
-  const numByes = Math.max(0, Math.ceil((numTeams - numRooms) / 2));
+  const numByes = Math.max(numTeams - numRooms * 2, 0);
   const totalTeams = numTeams + numByes; // Total teams including byes (fake teams)
   const midPoint = Math.floor(totalTeams / 2); // This is the index of the first team in the second row
+
+  console.log(`Total teams: ${totalTeams}, Midpoint: ${midPoint}, Num Byes: ${numByes}`);
 
   /* Plan is that we have a nested loop, where each team gets a turn to be fixed,
       and the others rotate around it. We will create a schedule for each round.
@@ -99,39 +101,135 @@ function generateTwoTeamSchedule(teams, rooms, matchesPerTeam) {
   */
 
   const schedule = [];
-  const teamHistory = Map();//Map team name to a Set of teams it has faced
+  const teamHistory = new Map();//Map team name to a Set of teams it has faced
   for (const team of teams) {
     teamHistory.set(team, new Set());
   }
+  const doneTeams = new Set(); // To keep track of teams that have faced all others
+
+  // rotatingTeam index ranges (inclusive):
+  // 0 - (numRooms - 2) : top row non-bye teams
+  // (numRooms - 1) - (midpoint - 2) : top row bye teams
+  // (midpoint - 1) - (length - 2) : bottom row non-bye teams
+
+  // Calculate indexes of non-bye rotating teams.
+  // If a done team appears in any of these indexes, we must skip that rotation.
+
+  const maxTopNonByeIndex = numRooms - 2;
+  const minBottomNonByeIndex = midPoint - 1;
 
   for(let i = 0; i < numTeams; i++) {
     // This loop represents the time that team i is fixed.
     let fixedTeam = teams[i];
-    let roatatingTeams = [...teams.slice(0, i), ...teams.slice(i + 1)];// All teams except the fixed one
-    for (let j = 0; j < roatatingTeams.length; j++) {
+    let rotatingTeams = [...teams.slice(0, i), ...teams.slice(i + 1)];// All teams except the fixed one
+
+    console.log(`Fixed Team: ${fixedTeam}`);
+
+    for (let j = 0; j < rotatingTeams.length; j++) {
       // This loop represents one rotation of the other teams - one chance to make a round.
-      // Top row: teams 0 to midPoint-1
-      // Bottom row: teams midPoint to totalTeams-1
+      // Top row: teams 0 to midPoint - 2
+      // Bottom row: teams midPoint to length - 2
 
-      for (let k = 0; k < midPoint; k++) {
-        // This loop represents one match in the potential round.
-        let team1 = roatatingTeams[k]; // Team in the top row
+      console.log(`Rotation ${j + 1}:`, rotatingTeams.join(', '));
 
-        // Bottom row team might be a bye team. Check if k + midPoint is < numTeams. If so, we can use it.
-        if (k + midPoint < totalTeams) {
-          let team2 = rotatingTeams[k + midPoint];
-          // Check if this match is valid (i.e., teams have not faced each other before)
-
-          // We can do this by checking the first team's history.
-          if (teamHistory.get(team1).has(team2)) { // We don't need to check the other way around.
-            break;// This rotation is invalid, break to the next one.
-          } 
+      // Rotate until none of the non-bye teams have faced rotatingTeams.length teams.
+      let loop = true;
+      while (loop && doneTeams.size != 0 && j < rotatingTeams.length) {
+        loop = false;
+        for (let x = 0; x < maxTopNonByeIndex; x++) {
+          // Check if the team in this index has faced all other teams.
+          if (doneTeams.has(rotatingTeams[x])) {
+            // This team has faced all others, we need to rotate again.
+            loop = true;
+            break; // Break out of the for loop, rotate again.
+          }
+        }
+        for (let x = minBottomNonByeIndex; x < rotatingTeams.length; x++) {
+          // Check if the team in this index has faced all other teams.
+          if (doneTeams.has(rotatingTeams[x])) {
+            // This team has faced all others, we need to rotate again.
+            loop = true;
+            break; // Break out of the for loop, rotate again.
+          }
+        }
+        if (loop) {
+          // Rotate the teams
+          console.log('Skipping rotation due to done team:', rotatingTeams[j]);
+          rotatingTeams.push(rotatingTeams.shift());
+          j++; // Increment j so we don't try a bad rotation again.
+          console.log('New rotation: ', rotatingTeams.join(', '));
         }
       }
-      
+
+      let valid = true;
+
+      let roundMatches = [];
+      let roundByes = [];
+
+      for (let k = 0; k < rotatingTeams.length; k++) {
+        // This loop represents one match in the potential round.
+        let team1 = fixedTeam;
+        if (k != 0) {
+          team1 = rotatingTeams[k - 1]; // Team in the top row
+        }
+        console.log(`k = ${k}, Team 1: ${team1}`);
+
+        // Bottom row team might be a bye team. Check if k + midPoint is < numTeams. If so, we can use it.
+        if (k + midPoint < numTeams) {
+          if (teamHistory.get(team1).length >= rotatingTeams.length) {
+            //This team has seen all others already. Skip this rotation.
+            valid = false;
+            break;
+          }
+
+          // bottom row is read in reverse order
+          let team2 = rotatingTeams[rotatingTeams.length - 1 - k];
+          
+          // Check if this match is valid (i.e., teams have not faced each other before)
+          // We can do this by checking the first team's history.
+          if (teamHistory.get(team1).has(team2)) { // We don't need to check the other way around.
+            valid = false;
+            break; // Break out of loop, rotate again. Can't use this rotation, do not pass go, do not collect $200.
+          } else {
+            roundMatches.push({ room: rooms[k], teams: [team1, team2] });
+          }
+        } else {
+          // If the second team is out of bounds, it means the first team has a bye.
+          console.log(`Team ${team1} has a bye.`);
+          roundByes.push(team1);
+        }
+      }
+
+      // If we're still valid by this point, we can add the matches to the schedule and update the team history.
+      if (valid) {
+        // Update team history
+        for (const match of roundMatches) {
+          const [team1, team2] = match.teams;
+          teamHistory.get(team1).add(team2);
+          teamHistory.get(team2).add(team1);
+          if (teamHistory.get(team1).size > rotatingTeams.length) {
+            doneTeams.add(team1); // This team has faced all others
+          }
+          if (teamHistory.get(team2).size > rotatingTeams.length) {
+            doneTeams.add(team2); // This team has faced all others
+          }
+        }
+
+        // Add byes to the schedule
+        if (roundByes.length > 0) {
+          // If there are byes, we need to add them to the schedule in a "Bye" room.
+          roundMatches.push({ room: 'Bye', teams: roundByes });
+        }
+        console.log('Valid matches added: ', roundMatches);
+        schedule.push(roundMatches);
+      }
+      // Rotate the rotatingTeams array for the next iteration
+      // Move the last team to the front
+      rotatingTeams.push(rotatingTeams.shift());
     }
   }
 
+  return schedule;// just for debugging, we're not going to duplicate matches matchesPerTeam times yet.
 }
 
 // Example usage
