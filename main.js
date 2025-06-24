@@ -65,150 +65,73 @@ function generateMatchSchedule(teams, rooms, matchesPerTeam, teamsPerRound) {
   return formatted;
 }
 
-function generateThreeTeamSchedule(teams, rooms, matchesPerTeam) {
-  let numTeams = teams.length;
-  let teamsList = [...teams];
-  // Add byes if needed to make the number of teams divisible by 3
-  let numByes = (3 - (numTeams % 3)) % 3;
-  for (let i = 0; i < numByes; i++) {
-    teamsList.push('Bye');
-  }
-  numTeams = teamsList.length;
-  const rounds = [];
-  const numGroups = numTeams / 3;
-  const numRounds = (numTeams - 1) * matchesPerTeam / 2; // Each round: every team appears once
-
-  // Helper to shuffle room assignments
-  function shuffle(arr) {
-    let a = arr.slice();
-    for (let i = a.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [a[i], a[j]] = [a[j], a[i]];
-    }
-    return a;
-  }
-
-  // Generate base triangular rounds using rotation
-  let baseRounds = [];
-  let arr = teamsList.slice();
-  for (let r = 0; r < numTeams - 1; r++) {
-    let round = [];
-    for (let g = 0; g < numGroups; g++) {
-      let t1 = arr[(g * 3) % numTeams];
-      let t2 = arr[(g * 3 + 1) % numTeams];
-      let t3 = arr[(g * 3 + 2) % numTeams];
-      round.push([t1, t2, t3]);
-    }
-    baseRounds.push(round);
-    // Rotate: keep first team fixed, rotate the rest
-    arr = [arr[0]].concat(arr.slice(1).slice(-1)).concat(arr.slice(1, -1));
-  }
-
-  // Repeat base rounds matchesPerTeam times, shuffling order each time
-  let allRounds = [];
-  for (let m = 0; m < matchesPerTeam; m++) {
-    let copy = baseRounds.map(round => round.slice());
-    // Shuffle the order of rounds for variety
-    for (let i = copy.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [copy[i], copy[j]] = [copy[j], copy[i]];
-    }
-    allRounds = allRounds.concat(copy);
-  }
-
-  // Assign groups to rooms per round
-  for (let r = 0; r < allRounds.length; r++) {
-    let groups = allRounds[r];
-    let roomOrder = shuffle(rooms.concat());
-    let round = [];
-    for (let i = 0; i < groups.length; i++) {
-      let group = groups[i];
-      let room = roomOrder[i % rooms.length] || 'Bye';
-      let realTeams = group.filter(t => t !== 'Bye');
-      if (realTeams.length === 1) {
-        round.push({ room: 'Bye', teams: realTeams });
-      } else if (realTeams.length === 2) {
-        round.push({ room, teams: realTeams });
-      } else if (realTeams.length === 3) {
-        round.push({ room, teams: realTeams });
-      }
-      // If all are 'Bye', skip
-    }
-    rounds.push(round);
-  }
-
-  return rounds;
-}
-
 function generateTwoTeamSchedule(teams, rooms, matchesPerTeam) {
-  let numTeams = teams.length;
-  let isOdd = numTeams % 2 !== 0;
-  let teamsList = [...teams];
-  if (isOdd) {
-    teamsList.push('Bye');
-    numTeams++;
-  }
-  const rounds = [];
-  const numRounds = (numTeams - 1) * matchesPerTeam;
-  const half = numTeams / 2;
+  // Teams: list of team names
+  // Rooms: list of room names
+  // Matches per team: number of times each team should see each other team
+  // (i.e., if 2, then team A will see team B twice)
+  // Format: [{ Room 1: [A,B], Room 2: [C,D]...}, {Room 1: [C, D]...} ...] you get the idea
+  // Follow a round-robin style schedule.
+  // If we don't have enough rooms, extra teams are put in a "Bye" room, they will not be forgotten!
+  // If a team has no one to face, they will also be put in a "Bye" room.
 
-  // For shuffling room assignments per round
-  function shuffle(arr) {
-    let a = arr.slice();
-    for (let i = a.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [a[i], a[j]] = [a[j], a[i]];
-    }
-    return a;
-  }
+  // We will use the two-row schedule algorithm, fix one team and rotate the others.
 
-  // Generate base round-robin for one cycle
-  let baseRounds = [];
-  let arr = teamsList.slice();
-  for (let r = 0; r < numTeams - 1; r++) {
-    let matches = [];
-    for (let i = 0; i < half; i++) {
-      let t1 = arr[i];
-      let t2 = arr[numTeams - 1 - i];
-      matches.push([t1, t2]);
-    }
-    baseRounds.push(matches);
-    // Rotate except first team
-    arr = [arr[0]].concat([arr[numTeams - 1]].concat(arr.slice(1, numTeams - 1)));
-  }
+  // Round robin: keep one team fixed and rotate the others. Team 0 vs Team n/2, Team 1 vs Team n/2+1, etc.
 
-  // Repeat base rounds matchesPerTeam times, shuffling order each time
-  let allRounds = [];
-  for (let m = 0; m < matchesPerTeam; m++) {
-    let copy = baseRounds.map(round => round.slice());
-    // Shuffle the order of rounds for variety
-    for (let i = copy.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [copy[i], copy[j]] = [copy[j], copy[i]];
-    }
-    allRounds = allRounds.concat(copy);
+  // First, calculate number of 'bye' teams needed. If odd, we need at least one. If we have insufficient rooms, we will need more.
+  const numTeams = teams.length;
+  const numRooms = rooms.length;
+  const numByes = Math.max(0, Math.ceil((numTeams - numRooms) / 2));
+  const totalTeams = numTeams + numByes; // Total teams including byes (fake teams)
+  const midPoint = Math.floor(totalTeams / 2); // This is the index of the first team in the second row
+
+  /* Plan is that we have a nested loop, where each team gets a turn to be fixed,
+      and the others rotate around it. We will create a schedule for each round.
+
+      Teams are placed in two rows, the top left team is fixed and the rest rotate.
+      If teams are in indexes n-1-numByes to n-1, they are placed in the Bye room.
+
+      Once all rotations have been done, we make the next team the fixed one and repeat.
+      Since this process may produce duplicate matches, we need to check for them and skip rotations that have duplicate matches.
+      
+      We will map each team to a list of teams it has faced. Check against it before adding a match.
+  */
+
+  const schedule = [];
+  const teamHistory = Map();//Map team name to a Set of teams it has faced
+  for (const team of teams) {
+    teamHistory.set(team, new Set());
   }
 
-  // Assign matches to rooms per round
-  for (let r = 0; r < allRounds.length; r++) {
-    let matches = allRounds[r];
-    let roomOrder = shuffle(rooms.concat());
-    let round = [];
-    for (let i = 0; i < matches.length; i++) {
-      let [t1, t2] = matches[i];
-      let room = roomOrder[i % rooms.length] || 'Bye';
-      if (t1 === 'Bye') {
-        round.push({ room: 'Bye', teams: [t2] });
-      } else if (t2 === 'Bye') {
-        round.push({ room: 'Bye', teams: [t1] });
-      } else {
-        round.push({ room, teams: [t1, t2] });
+  for(let i = 0; i < numTeams; i++) {
+    // This loop represents the time that team i is fixed.
+    let fixedTeam = teams[i];
+    let roatatingTeams = [...teams.slice(0, i), ...teams.slice(i + 1)];// All teams except the fixed one
+    for (let j = 0; j < roatatingTeams.length; j++) {
+      // This loop represents one rotation of the other teams - one chance to make a round.
+      // Top row: teams 0 to midPoint-1
+      // Bottom row: teams midPoint to totalTeams-1
+
+      for (let k = 0; k < midPoint; k++) {
+        // This loop represents one match in the potential round.
+        let team1 = roatatingTeams[k]; // Team in the top row
+
+        // Bottom row team might be a bye team. Check if k + midPoint is < numTeams. If so, we can use it.
+        if (k + midPoint < totalTeams) {
+          let team2 = rotatingTeams[k + midPoint];
+          // Check if this match is valid (i.e., teams have not faced each other before)
+
+          // We can do this by checking the first team's history.
+          if (teamHistory.get(team1).has(team2)) { // We don't need to check the other way around.
+            break;// This rotation is invalid, break to the next one.
+          } 
+        }
       }
+      
     }
-    rounds.push(round);
   }
 
-  return rounds;
 }
 
 // Example usage
