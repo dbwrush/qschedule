@@ -22,7 +22,20 @@ function generateMatchSchedule(teams, rooms, matchesPerTeam, teamsPerRound) {
     return [];
   }
 
-  rawSchedule = generateSchedule(teams, rooms);
+  // Use teamsPerRound to create an array of [room, capacity] pairs.
+  // Create rooms with specified capacity
+  roomSets = [];
+  for (let i = 0; i < rooms.length; i++) {
+    const roomName = rooms[i];
+    // Default capacity is 2 if not specified
+    if (teamsPerRound) {
+      roomSets.push({ name: roomName, capacity: teamsPerRound });
+    } else {
+      roomSets.push({ name: roomName, capacity: 2 }); // Default capacity
+    }
+  }
+
+  rawSchedule = generateSchedule(teams, roomSets);
   // If matchesPerTeam is specified, we need to repeat the schedule. Shuffle the rounds.
   if (matchesPerTeam > 1) {
     const repeatedSchedule = [];
@@ -90,12 +103,14 @@ function generateSchedule(teams, rooms) {
   }
 
   // Sort rooms in order of how many teams they can hold (rooms are arrays of [roomName, capacity])
-  // Higher capacity rooms should go first. Access room capacity by room[1].
+  // Higher capacity rooms should go first. Access room capacity by room.capacity.
   rooms.sort((a, b) => {
     const capacityA = a.capacity || 2; // Default capacity is 2 if not specified
     const capacityB = b.capacity || 2;
     return capacityB - capacityA; // Sort descending by capacity
   });
+
+  console.log("Rooms: ", rooms);
 
   // Core loop to generate rounds
   while (pairs.length > 0) {
@@ -103,6 +118,7 @@ function generateSchedule(teams, rooms) {
     const usedTeams = new Set(); // Track teams already used in this round
     const unusedTeams = new Set(teams); // Track teams that are not used in this round
     for (const room of rooms) {
+      console.log(`Processing room: ${room.name} with capacity ${room.capacity}`);
       if (pairs.length === 0) break; // No more pairs to process
 
       // Find the next pair that can fit in this room
@@ -122,11 +138,13 @@ function generateSchedule(teams, rooms) {
       // Array of teams in the room
       let roomTeams = [pair.team1, pair.team2];
 
+      console.log(`Adding match in room ${room.name}: ${pair.team1} vs ${pair.team2}`);
+
       // Remove the used pair from the list
       pairs.splice(pairIndex, 1);
 
       // Support 3+ teams per round by looking for another team that needs a match with all the teams already in the room
-      for (let i = 2; i < room[1]; i++) {
+      for (let i = 2; i < room.capacity; i++) {
         // Create a list of all remaining pairs that include exactly one of the teams already in the room.
         // Then look over that list to see if there's an unused team that's mentioned with every team in the room.
         const remainingPairs = pairs.filter(p => {
@@ -163,7 +181,7 @@ function generateSchedule(teams, rooms) {
               pairs = pairs.filter(pair => !appearances.includes(pair));
               // Update matches for the new team
               teamMatchCount.set(team, (teamMatchCount.get(team) || 0) + 1);
-              console.log(`Added ${team} to room ${room}`);
+              console.log(`Added ${team} to room ${room.name}`);
               break; // Exit the loop after adding one team
             }
           }
@@ -177,7 +195,8 @@ function generateSchedule(teams, rooms) {
         [roomTeams[i], roomTeams[j]] = [roomTeams[j], roomTeams[i]];
       }
       // Add the room and its teams to the round
-      round.push({ room: room, teams: roomTeams });
+      round.push({ room: room.name, teams: roomTeams });
+      console.log(`Added match in room ${room.name}: ${roomTeams.join(' vs ')}`);
     }
 
     // Now that we have filled the round, all teams that haven't been used are assigned to a "Bye" room.
