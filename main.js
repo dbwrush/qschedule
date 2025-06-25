@@ -1,10 +1,12 @@
-/*JavaScript function take 4 arguments:
-    1. A list of team names
-    2. A list of room names
-    3. Desired number of times each team should face each other
-    4. How many teams per round (2 or 3 at once)
-*/
-
+// roundRobinScheduler.js
+/**
+ * Generate a round robin schedule for given teams, rooms, and matches per team.
+ * @param {string[]} teams - Array of team names
+ * @param {string[]} rooms - Array of room names
+ * @param {number} matchesPerTeam - Number of times each team should play every other team
+ * @param {number} teamsPerRound - Number of teams per round (for grouping)
+ * @returns {Array} Array of rounds, each round is an object with room names as keys and arrays of teams as values
+ */
 function generateMatchSchedule(teams, rooms, matchesPerTeam, teamsPerRound) {
   let rawSchedule;
 
@@ -199,16 +201,6 @@ function generateSchedule(teams, rooms, matchesPerTeam, teamsPerRound) {
 
   return schedule;// just for debugging, we're not going to duplicate matches matchesPerTeam times yet.
 }
-
-// Example usage
-/*
- const teams = ['Team A', 'Team B', 'Team C', 'Team D', 'Team E', 'Team F'];
- const rooms = ['Room 1', 'Room 2', 'Room 3'];
- const matchesPerTeam = 2;
- const teamsPerRound = 3;
-
- const schedule = generateMatchSchedule(teams, rooms, matchesPerTeam, teamsPerRound);
- console.log(JSON.stringify(schedule, null, 2));*/
 
 // Implement frontend to display the schedule using input
 document.addEventListener('DOMContentLoaded', () => {
