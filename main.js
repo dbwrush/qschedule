@@ -78,7 +78,7 @@ function generateSchedule(teams, rooms, matchesPerTeam, teamsPerRound) {
     6. Repeat 3-5 until all matches are burned.
   */
   const schedule = [];
-  const pairs = [];
+  let pairs = [];
   const teamMatchCount = new Map(); // Track how many matches each team has played
 
   // Step 1: Create all pairs of teams
@@ -101,12 +101,6 @@ function generateSchedule(teams, rooms, matchesPerTeam, teamsPerRound) {
       if (pairIndex === -1) continue; // No valid pair found for this room
 
       const pair = pairs[pairIndex];
-      if (Math.random() < 0.5) {// Give teams equal chance to be first or second in the room.
-        // Not hard to imagine that there's an advantage to being on one side or another, depending on the team.
-        round.push({ room, teams: [pair.team1, pair.team2] });
-      } else {
-        round.push({ room, teams: [pair.team2, pair.team1] });
-      }
       usedTeams.add(pair.team1);
       usedTeams.add(pair.team2);
       unusedTeams.delete(pair.team1);
@@ -151,26 +145,35 @@ function generateSchedule(teams, rooms, matchesPerTeam, teamsPerRound) {
           for (const [team, appearances] of teamPairs.entries()) {
             if (appearances.length === roomTeams.length) {
               // We can add this team to the room
+              console.log(roomTeams);
               roomTeams.push(team);
+              console.log(roomTeams);
               usedTeams.add(team);
               unusedTeams.delete(team);
-              // Remove the appearances from pairs
-              console.log(pairs);
-              console.log(appearances);
+              // Remove the appearances from pairs]
               pairs = pairs.filter(pair => !appearances.includes(pair));
-              // Update match count for the new team
+              // Update matches for the new team
               teamMatchCount.set(team, (teamMatchCount.get(team) || 0) + 1);
               console.log(`Added ${team} to room ${room}`);
               break; // Exit the loop after adding one team
             }
           }
-        } 
+        }
       }
+
+      // Now we need to put the roomTeams into the round. The order of teams should be randomized to avoid bias.
+      // Shuffle the roomTeams array
+      for (let i = roomTeams.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [roomTeams[i], roomTeams[j]] = [roomTeams[j], roomTeams[i]];
+      }
+      // Add the room and its teams to the round
+      round.push({ room: room, teams: roomTeams });
     }
 
     // Now that we have filled the round, all teams that haven't been used are assigned to a "Bye" room.
-    if (usedTeams.size < teams.length) {
-      const byeTeams = teams.filter(team => !usedTeams.has(team));
+    if (unusedTeams.size > 0) {
+      const byeTeams = Array.from(unusedTeams);
       if (byeTeams.length > 0) {
         round.push({ room: "Bye", teams: byeTeams });
         console.log(`Bye teams for this round: ${byeTeams.join(', ')}`);
