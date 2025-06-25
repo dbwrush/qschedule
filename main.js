@@ -1,12 +1,3 @@
-// roundRobinScheduler.js
-/**
- * Generate a round robin schedule for given teams, rooms, and matches per team.
- * @param {string[]} teams - Array of team names
- * @param {string[]} rooms - Array of room names
- * @param {number} matchesPerTeam - Number of times each team should play every other team
- * @param {number} teamsPerRound - Number of teams per round (for grouping)
- * @returns {Array} Array of rounds, each round is an object with room names as keys and arrays of teams as values
- */
 function generateMatchSchedule(teams, rooms, matchesPerTeam, teamsPerRound) {
   let rawSchedule;
 
@@ -17,10 +8,6 @@ function generateMatchSchedule(teams, rooms, matchesPerTeam, teamsPerRound) {
   }
   if (rooms.length < 1) {
     alert('At least 1 room is required.');
-    return [];
-  }
-  if (rooms > teams / teamsPerRound) {
-    alert('More rooms than needed. Recommend ~ ' + Math.ceil(teams / teamsPerRound) + ' rooms.');
     return [];
   }
   //Check if any teams or rooms have duplicate names
@@ -35,7 +22,19 @@ function generateMatchSchedule(teams, rooms, matchesPerTeam, teamsPerRound) {
     return [];
   }
 
-  rawSchedule = generateSchedule(teams, rooms, matchesPerTeam, teamsPerRound);
+  rawSchedule = generateSchedule(teams, rooms);
+  // If matchesPerTeam is specified, we need to repeat the schedule. Shuffle the rounds.
+  if (matchesPerTeam > 1) {
+    const repeatedSchedule = [];
+    for (let i = 0; i < matchesPerTeam; i++) {
+      // Shuffle the rounds to avoid repeating the same order
+      const shuffledRounds = rawSchedule.map(round => {
+        return round.sort(() => Math.random() - 0.5);
+      });
+      repeatedSchedule.push(...shuffledRounds);
+    }
+    rawSchedule = repeatedSchedule;
+  }
 
   // Reformat schedule to expected format: array of objects, each with room names as keys and array of teams as values
   // Example: [{ Room 1: [A,B], Room 2: [C,D], ... }, ...]
@@ -58,7 +57,7 @@ function generateMatchSchedule(teams, rooms, matchesPerTeam, teamsPerRound) {
   return formatted;
 }
 
-function generateSchedule(teams, rooms, matchesPerTeam, teamsPerRound) {
+function generateSchedule(teams, rooms) {
   // Teams: list of team names
   // Rooms: list of room names
   // Matches per team: number of times each team should see each other team
@@ -90,6 +89,14 @@ function generateSchedule(teams, rooms, matchesPerTeam, teamsPerRound) {
     }
   }
 
+  // Sort rooms in order of how many teams they can hold (rooms are arrays of [roomName, capacity])
+  // Higher capacity rooms should go first. Access room capacity by room[1].
+  rooms.sort((a, b) => {
+    const capacityA = a.capacity || 2; // Default capacity is 2 if not specified
+    const capacityB = b.capacity || 2;
+    return capacityB - capacityA; // Sort descending by capacity
+  });
+
   // Core loop to generate rounds
   while (pairs.length > 0) {
     const round = [];
@@ -119,7 +126,7 @@ function generateSchedule(teams, rooms, matchesPerTeam, teamsPerRound) {
       pairs.splice(pairIndex, 1);
 
       // Support 3+ teams per round by looking for another team that needs a match with all the teams already in the room
-      for (let i = 2; i < teamsPerRound; i++) {
+      for (let i = 2; i < room[1]; i++) {
         // Create a list of all remaining pairs that include exactly one of the teams already in the room.
         // Then look over that list to see if there's an unused team that's mentioned with every team in the room.
         const remainingPairs = pairs.filter(p => {
