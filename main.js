@@ -157,15 +157,7 @@ function generateSchedule(teams, rooms, matchesPerTeam, teamsPerRound) {
               // Remove the appearances from pairs
               console.log(pairs);
               console.log(appearances);
-              for (pair of pairs) {
-                if (appearances.includes(pair)) {
-                  // Remove the pair from pairs
-                  const index = pairs.indexOf(pair);
-                  if (index > -1) {
-                    pairs.splice(index, 1);
-                  }
-                }
-              }
+              pairs = pairs.filter(pair => !appearances.includes(pair));
               // Update match count for the new team
               teamMatchCount.set(team, (teamMatchCount.get(team) || 0) + 1);
               console.log(`Added ${team} to room ${room}`);
