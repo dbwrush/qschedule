@@ -24,10 +24,7 @@
                     <label for="matches">Matches per Team</label>
                     <input type="number" id="matches" name="matches" min="1" max="100" value="1" required="true">
                 </div>
-                <div class="setting">
-                    <label for="tpr">Teams per Round</label>
-                    <input type="number" id="tpr" name="tpr" min="2" max="3" value="2" required="true">
-                </div>
+                <!-- Remove global Teams per Round input -->
             </div>
 
             <form action="">
@@ -38,9 +35,12 @@
                 </div>
                 <button id="add-team">Add Team</button>
 
-                <label for="rooms">Room Names:</label>
+                <label for="rooms">Room Names and Capacity:</label>
                 <div class="rooms">
-                    <input type="text" id="room" name="rooms" placeholder="Room Name" required="true">
+                    <div class="room-row">
+                        <input type="text" id="room" name="rooms" placeholder="Room Name" required="true">
+                        <input type="number" class="room-capacity" name="room-capacities" min="2" max="10" value="2" required="true" style="width: 5em; margin-left: 0.5em;" placeholder="Capacity">
+                    </div>
                 </div>
                 <button id="add-room">Add Room</button>
 

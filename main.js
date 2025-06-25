@@ -1,4 +1,4 @@
-function generateMatchSchedule(teams, rooms, matchesPerTeam, teamsPerRound) {
+function generateMatchSchedule(teams, rooms, matchesPerTeam) {
   let rawSchedule;
 
   // Validate inputs
@@ -16,26 +16,14 @@ function generateMatchSchedule(teams, rooms, matchesPerTeam, teamsPerRound) {
     alert('Team names must be unique.');
     return [];
   }
-  const uniqueRooms = new Set(rooms);
+  const uniqueRooms = new Set(rooms.map(r => r.name));
   if (uniqueRooms.size !== rooms.length) {
     alert('Room names must be unique.');
     return [];
   }
 
-  // Use teamsPerRound to create an array of [room, capacity] pairs.
-  // Create rooms with specified capacity
-  roomSets = [];
-  for (let i = 0; i < rooms.length; i++) {
-    const roomName = rooms[i];
-    // Default capacity is 2 if not specified
-    if (teamsPerRound) {
-      roomSets.push({ name: roomName, capacity: teamsPerRound });
-    } else {
-      roomSets.push({ name: roomName, capacity: 2 }); // Default capacity
-    }
-  }
-
-  rawSchedule = generateSchedule(teams, roomSets);
+  // Pass rooms directly to generateSchedule
+  rawSchedule = generateSchedule(teams, rooms);
   // If matchesPerTeam is specified, we need to repeat the schedule. Shuffle the rounds.
   if (matchesPerTeam > 1) {
     const repeatedSchedule = [];
@@ -61,8 +49,8 @@ function generateMatchSchedule(teams, rooms, matchesPerTeam, teamsPerRound) {
     }
     // Ensure all rooms are present (for display)
     for (const room of rooms) {
-      if (!(room in roundObj)) {
-        roundObj[room] = [];
+      if (!(room.name in roundObj)) {
+        roundObj[room.name] = [];
       }
     }
     return roundObj;
@@ -247,13 +235,28 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('add-room').addEventListener('click', (e) => {
     e.preventDefault();
     const roomsDiv = document.querySelector('.rooms');
+    const roomRow = document.createElement('div');
+    roomRow.className = 'room-row';
     const input = document.createElement('input');
     input.type = 'text';
     input.id = 'room';
     input.name = 'rooms';
     input.placeholder = 'Room Name';
     input.required = true;
-    roomsDiv.appendChild(input);
+    const capInput = document.createElement('input');
+    capInput.type = 'number';
+    capInput.className = 'room-capacity';
+    capInput.name = 'room-capacities';
+    capInput.min = 2;
+    capInput.max = 10;
+    capInput.value = 2;
+    capInput.required = true;
+    capInput.style.width = '5em';
+    capInput.style.marginLeft = '0.5em';
+    capInput.placeholder = 'Capacity';
+    roomRow.appendChild(input);
+    roomRow.appendChild(capInput);
+    roomsDiv.appendChild(roomRow);
   });
 
   // Handle form submission
@@ -262,23 +265,28 @@ document.addEventListener('DOMContentLoaded', () => {
     // Get all team names
     const teamInputs = document.querySelectorAll('input[name="teams"]');
     const teams = Array.from(teamInputs).map(input => input.value.trim()).filter(Boolean);
-    // Get all room names
-    const roomInputs = document.querySelectorAll('input[name="rooms"]');
-    const rooms = Array.from(roomInputs).map(input => input.value.trim()).filter(Boolean);
+    // Get all room names and capacities
+    const roomRows = document.querySelectorAll('.rooms .room-row');
+    const rooms = Array.from(roomRows).map(row => {
+      const nameInput = row.querySelector('input[name="rooms"]');
+      const capInput = row.querySelector('input[name="room-capacities"]');
+      return {
+        name: nameInput.value.trim(),
+        capacity: parseInt(capInput.value, 10)
+      };
+    }).filter(room => room.name);
     // Get matches per team
     const matchesPerTeam = parseInt(document.getElementById('matches').value, 10);
-    // Get teams per round
-    const teamsPerRound = parseInt(document.getElementById('tpr').value, 10);
 
     // Generate schedule
-    const schedule = generateMatchSchedule(teams, rooms, matchesPerTeam, teamsPerRound);
+    const schedule = generateMatchSchedule(teams, rooms, matchesPerTeam);
 
     console.log(JSON.stringify(schedule, null, 2)); // For debugging
 
     // Display schedule as HTML table
-    displaySchedule(schedule, rooms);
+    displaySchedule(schedule, rooms.map(r => r.name));
     // Add CSV download button
-    addCSVDownload(schedule, rooms);
+    addCSVDownload(schedule, rooms.map(r => r.name));
   });
 });
 
