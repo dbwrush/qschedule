@@ -23,7 +23,7 @@ function generateMatchSchedule(teams, rooms, matchesPerTeam) {
   }
 
   // Pass rooms directly to generateSchedule
-  rawSchedule = generateSchedule(teams, rooms);
+  rawSchedule = generateRoundRobinSchedule(teams, rooms);
   // If matchesPerTeam is specified, we need to repeat the schedule. Shuffle the rounds.
   if (matchesPerTeam > 1) {
     const repeatedSchedule = [];
@@ -58,7 +58,7 @@ function generateMatchSchedule(teams, rooms, matchesPerTeam) {
   return formatted;
 }
 
-function generateSchedule(teams, rooms) {
+function generateRoundRobinSchedule(teamRoster, roomsConfig) {
   // Teams: list of team names
   // Rooms: list of room names
   // Matches per team: number of times each team should see each other team
@@ -214,6 +214,211 @@ function generateSchedule(teams, rooms) {
   }
 
   return schedule;// just for debugging, we're not going to duplicate matches matchesPerTeam times yet.
+}
+
+function calcTournament(teams, rooms) {
+  // Not a scheduler, instead this one uses the number of teams and the room info to calculate the number of rounds needed.
+  // Since the teams participating in a tournament depend on the results of previous rounds, we can't make a schedule in advance.
+  // Instead, we're just calculating what the fewest number of rounds needed for a tournament is, and determining which rooms should be used.
+
+  // Start by sorting the rooms by capacity to a new array.
+  const sortedRooms = rooms.slice().sort((a, b) => (b.capacity || 2) - (a.capacity || 2));
+
+  let rounds = [];
+  let remainingTeams = teams.length;
+  
+  while (remainingTeams > 1) {
+    let round = [];
+    let teamsInRound = 0;
+    
+    // Fill rooms for this round
+    for (let i = 0; i < sortedRooms.length && teamsInRound < remainingTeams; i++) {
+      const room = sortedRooms[i];
+      const roomCapacity = room.capacity || 2;
+      if (teamsInRound + roomCapacity <= remainingTeams) {
+        round.push(room);
+        teamsInRound += roomCapacity;
+      }
+    }
+    
+    rounds.push(round);
+    remainingTeams = Math.ceil(teamsInRound / 2); // Winners advance to next round
+  }
+
+  return rounds;
+}
+
+function genCSVSchedule(teamRosters, roomConfigs, eventName, division, tournament, doFinals, finalsTournament, matchesPerTeam) {
+  let output = "";
+
+  // Begin by printing a team roster. Column 1 = team name, Column 2 is quizzer name.
+  for (let i = 0; i < teamRosters.length; i++) {
+    for (let k = 1; k < teamRosters[i].length; k++) { //Start at 1 because index 0 is the team name;
+      output += teamRosters[i][0] + "," + teamRosters[i][k] + ",\n";
+    }
+  }
+
+  // RoomConfigs is an array of rooms. Each room is also an array, Index 0 is the name.
+  // Index 1 - 3 are a true or false depending on if that room can have a team in that slot.
+  // EX: A room that can have a team on left and center but not right may look like: ["Room 3", true, true, false]
+
+  /* Schedule row format:
+      - Timestamp - YYYY-MM-DD-HH:MM:SS.MMMMMM (realistically, seconds and milliseconds are always 0);
+      - Event name
+      - Division [Usually Experienced or Novice, but not always]
+      - Room number
+      - Round number (For non-finals, increment by 1. For finals, increment from Semi-Final, Consolation, Finals)
+      - Room left team number     - teams index of the team assigned to left slot
+      - Room center team number   - teams index of the team assigned to center slot
+      - Room right team number    - teams index of the team assigned to right slot
+      - In a final tournament, the room assignments are blank.
+      - Quizmaster name - leave blank.
+      - Content Judge name - leave blank.
+      - Scorekeeper name - leave blank.
+      - Tournament name. If this is part of finals, use the finalsTournament, otherwise use tournament.
+
+      Typically all the matches in a single room will come consecutively, and then we we do the next room. 
+      So a schedule would show room 1's matches for rounds 1 - n, then it would do room 2, etc.
+  */
+
+  // Convert teams and rooms as lists usable in generateMatchSchedule
+  // teams = an array of team names, simple as that.
+  // rooms = an array of room objects with name and capacity.
+
+  let teams = [];
+  for (let i = 0; i < teamRosters.length; i++) {
+    teams.push(teamRosters[i][0]);
+  }
+
+  let rooms = [];
+  for (let i = 0; i < roomConfigs.length; i++) {
+    let room = {}; // Initialize room object
+    // Count how many slot positions in the roomConfig are true
+    let capacity = 0;
+    for (let j = 1; j < roomConfigs[i].length; j++) { // Start at 1, skip room name
+      if (roomConfigs[i][j] === true) {
+        capacity++;
+      }
+    }
+    room.name = roomConfigs[i][0];
+    room.capacity = capacity;
+    rooms.push(room);
+  }
+
+  let schedule = generateMatchSchedule(teams, rooms, matchesPerTeam);
+
+  // Helper function to get current timestamp
+  function getCurrentTimestamp() {
+    const now = new Date();
+    return now.toISOString().replace('T', '-').replace(/\.\d{3}Z$/, '.000000');
+  }
+
+  // Helper function to get team index by name
+  function getTeamIndex(teamName) {
+    for (let i = 0; i < teams.length; i++) {
+      if (teams[i] === teamName) {
+        return i;
+      }
+    }
+    return -1; // Team not found
+  }
+
+  // Add each room's schedule to the output.
+  for (let i = 0; i < roomConfigs.length; i++) {  // Iterate over rooms
+    const currentRoom = roomConfigs[i];
+    const roomName = currentRoom[0];
+    
+    for (let j = 0; j < schedule.length; j++) { // Iterate over the rounds
+      let round = schedule[j];
+      
+      // Find matches for this room in this round
+      if (round[roomName] && round[roomName].length > 0) {
+        const teamsInMatch = round[roomName];
+        const roundNumber = j + 1;
+        
+        // Create CSV row for this match
+        let csvRow = getCurrentTimestamp() + ","; // Timestamp
+        csvRow += eventName + ","; // Event name
+        csvRow += division + ","; // Division
+        csvRow += roomName + ","; // Room number
+        csvRow += roundNumber + ","; // Round number
+        
+        // Get the room configuration to determine which slots are available
+        const roomConfig = roomConfigs[i]; // currentRoom
+        const leftSlotAvailable = roomConfig[1];
+        const centerSlotAvailable = roomConfig[2];
+        const rightSlotAvailable = roomConfig[3];
+        
+        // Assign teams to available slots in order
+        let leftTeam = "";
+        let centerTeam = "";
+        let rightTeam = "";
+        
+        let teamIndex = 0;
+        if (leftSlotAvailable && teamIndex < teamsInMatch.length) {
+          leftTeam = getTeamIndex(teamsInMatch[teamIndex]);
+          teamIndex++;
+        }
+        if (centerSlotAvailable && teamIndex < teamsInMatch.length) {
+          centerTeam = getTeamIndex(teamsInMatch[teamIndex]);
+          teamIndex++;
+        }
+        if (rightSlotAvailable && teamIndex < teamsInMatch.length) {
+          rightTeam = getTeamIndex(teamsInMatch[teamIndex]);
+          teamIndex++;
+        }
+        
+        csvRow += leftTeam + ","; // Room left team number
+        csvRow += centerTeam + ","; // Room center team number  
+        csvRow += rightTeam + ","; // Room right team number
+        
+        csvRow += ","; // Quizmaster name - blank
+        csvRow += ","; // Content Judge name - blank
+        csvRow += ","; // Scorekeeper name - blank
+        csvRow += tournament; // Tournament name
+        csvRow += "\n";
+        
+        output += csvRow;
+      }
+    }
+    
+    // Now that the tournament rounds are done, see if we're doing finals also.
+    if (doFinals) {
+      // Use calcTournament to determine how many rounds of finals this room is being used for.
+      const finalRounds = calcTournament(teams, rooms);
+      let finalRoundNames = ["Semi-Final", "Consolation", "Finals"];
+      
+      for (let roundIdx = 0; roundIdx < finalRounds.length; roundIdx++) {
+        const finalRound = finalRounds[roundIdx];
+        
+        // Check if current room is used in this final round
+        const isRoomUsed = finalRound.some(room => room.name === roomName);
+        
+        if (isRoomUsed) {
+          let csvRow = getCurrentTimestamp() + ","; // Timestamp
+          csvRow += eventName + ","; // Event name
+          csvRow += division + ","; // Division
+          csvRow += roomName + ","; // Room number
+          csvRow += (finalRoundNames[roundIdx] || `Final-Round-${roundIdx + 1}`) + ","; // Round name
+          
+          // In finals, team assignments are blank as noted in comments
+          csvRow += ","; // Room left team number - blank
+          csvRow += ","; // Room center team number - blank
+          csvRow += ","; // Room right team number - blank
+          
+          csvRow += ","; // Quizmaster name - blank
+          csvRow += ","; // Content Judge name - blank
+          csvRow += ","; // Scorekeeper name - blank
+          csvRow += finalsTournament; // Tournament name for finals
+          csvRow += "\n";
+          
+          output += csvRow;
+        }
+      }
+    }
+  }
+  
+  return output;
 }
 
 // Implement frontend to display the schedule using input
