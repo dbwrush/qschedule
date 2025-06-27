@@ -21,23 +21,24 @@
 
             <div class="settings-row">
                 <div class="setting">
-                    <label for="matches">Matches per Team</label>
+                    <label for="matches">Matches per Team:</label>
                     <input type="number" id="matches" name="matches" min="1" max="100" value="1" required="true">
                 </div>
                 <div class="setting">
-                    <label for="event-name">Event Name</label>
+                    <label for="event-name">Event Name:</label>
                     <input type="text" id="event-name" name="event-name" placeholder="Event Name" required="true">
                 </div>
                 <div class="setting">
-                    <label for="tournament-name">Tournament Name</label>
+                    <label for="tournament-name">Tournament Name:</label>
                     <input type="text" id="tournament-name" name="tournament-name" placeholder="Tournament Name" required="true">
                 </div>
                 <div class="setting">
-                    <label for="division">Division</label>
+                    <label for="division">Division:</label>
                     <input type="text" id="division" name="division" placeholder="Division (e.g., Experienced, Novice)" required="true">
                 </div>
             </div>
-
+        </div>
+        <div class="tile">
             <form action="">
                 <label class="different" for="teams">Teams:</label>
                 <div class="teams">
@@ -67,35 +68,53 @@
                     </div>
                 </div>
                 <button id="add-team">Add Team</button>
-
+        </div>
+        <div class="tile">
                 <label class="different" for="rooms">Room Names and Configuration:</label>
                 <div class="rooms">
                     <div class="room-row">
                         <input type="text" id="room" name="rooms" placeholder="Room Name" required="true">
                         <div class="room-slots">
-                            <label><input type="checkbox" class="room-slot" name="room-left" checked> Left</label>
-                            <label><input type="checkbox" class="room-slot" name="room-center" checked> Center</label>
-                            <label><input type="checkbox" class="room-slot" name="room-right"> Right</label>
+                          <label class="switch">
+                            <input type="checkbox" class="room-toggle" name="room-3team" checked>
+                            <span class="slider"></span>
+                          </label>
+                          <span class="toggle-label">3-Team Room</span>
                         </div>
                     </div>
                 </div>
                 <button id="add-room">Add Room</button>
-
+        </div>
+        <div class="tile">
                 <div class="settings-row">
-                    <div class="setting">
-                        <label for="do-finals">Include Finals</label>
-                        <input type="checkbox" id="do-finals" name="do-finals">
+                    <div class="setting" id="Tournament-Settings">
+                      <div class="setting-inner">
+                        <input type="radio" name="do-finals" id="do-finals" value="None" checked>
+                        <label for="do-finals">No Finals Bracket</label>
+                      </div>
+                      <div class="setting-inner">
+                        <input type="radio" name="do-finals" id="do-finals" value="Single Elimination">
+                        <label for="do-finals">Single Elimination</label>
+                      </div>
+                      <div class="setting-inner">
+                        <input type="radio" name="do-finals" id="do-finals" value="Double Elimination">
+                        <label for="do-finals">Double Elimination</label>
+                      </div>
+                        <!-- <input type="checkbox" id="do-finals" name="do-finals"> -->
                     </div>
                     <div class="setting">
-                        <label for="finals-tournament-name">Finals Tournament Name</label>
+                      <div class="setting-inner-2">
+                        <label for="finals-tournament-name">Finals Tournament Name:</label>
                         <input type="text" id="finals-tournament-name" name="finals-tournament-name" placeholder="Finals Tournament Name">
+                      </div>
                     </div>
                 </div>
-
+        </div>
                 <br>
-                
+        <div class="tile">
                 <button type="submit" id="submit">Generate Schedule</button>
                 <div id="csv"></div>
+        </div>
             </form>
         </div>
 

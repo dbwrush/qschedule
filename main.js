@@ -433,61 +433,23 @@ document.addEventListener('DOMContentLoaded', () => {
     teamsDiv.appendChild(teamSection);
   });
 
-  // Add Room button functionality
-  document.getElementById('add-room').addEventListener('click', (e) => {
-    e.preventDefault();
-    const roomsDiv = document.querySelector('.rooms');
-    const roomRow = document.createElement('div');
-    roomRow.className = 'room-row';
-    
-    const input = document.createElement('input');
-    input.type = 'text';
-    input.id = 'room';
-    input.name = 'rooms';
-    input.placeholder = 'Room Name';
-    input.required = true;
-    
-    const roomSlots = document.createElement('div');
-    roomSlots.className = 'room-slots';
-    
-    // Left slot
-    const leftLabel = document.createElement('label');
-    const leftCheckbox = document.createElement('input');
-    leftCheckbox.type = 'checkbox';
-    leftCheckbox.className = 'room-slot';
-    leftCheckbox.name = 'room-left';
-    leftCheckbox.checked = true; // Default to checked
-    leftLabel.appendChild(leftCheckbox);
-    leftLabel.appendChild(document.createTextNode(' Left'));
-    
-    // Center slot
-    const centerLabel = document.createElement('label');
-    const centerCheckbox = document.createElement('input');
-    centerCheckbox.type = 'checkbox';
-    centerCheckbox.className = 'room-slot';
-    centerCheckbox.name = 'room-center';
-    centerCheckbox.checked = true; // Default to checked
-    centerLabel.appendChild(centerCheckbox);
-    centerLabel.appendChild(document.createTextNode(' Center'));
-    
-    // Right slot
-    const rightLabel = document.createElement('label');
-    const rightCheckbox = document.createElement('input');
-    rightCheckbox.type = 'checkbox';
-    rightCheckbox.className = 'room-slot';
-    rightCheckbox.name = 'room-right';
-    rightCheckbox.checked = false; // Default to unchecked
-    rightLabel.appendChild(rightCheckbox);
-    rightLabel.appendChild(document.createTextNode(' Right'));
-    
-    roomSlots.appendChild(leftLabel);
-    roomSlots.appendChild(centerLabel);
-    roomSlots.appendChild(rightLabel);
-    
-    roomRow.appendChild(input);
-    roomRow.appendChild(roomSlots);
-    roomsDiv.appendChild(roomRow);
-  });
+document.getElementById('add-room').addEventListener('click', (e) => {
+  e.preventDefault();
+  const roomsDiv = document.querySelector('.rooms');
+  const roomRow = document.createElement('div');
+  roomRow.className = 'room-row';
+  roomRow.innerHTML = `
+    <input type="text" name="rooms" placeholder="Room Name" required="true">
+    <div class="room-slots">
+      <label class="switch">
+        <input type="checkbox" class="room-toggle" name="room-3team">
+        <span class="slider"></span>
+      </label>
+      <span class="toggle-label">3-Team Room</span>
+    </div>
+  `;
+  roomsDiv.appendChild(roomRow);
+});
 
   // Handle form submission
   document.querySelector('form').addEventListener('submit', (e) => {
