@@ -549,6 +549,12 @@ document.addEventListener('DOMContentLoaded', () => {
     // Get tournament information for finals
     const doFinals = document.getElementById('do-finals').checked;
 
+    // check that all teams have at least one member
+    if (teamRosters.some(roster => roster.length < 2)) {
+      alert('All teams must have at least one member.');
+      return;
+    }
+
     // Generate schedule
     const schedule = generateMatchSchedule(teams, rooms, matchesPerTeam);
 
