@@ -356,15 +356,15 @@ function genCSVSchedule(teamRosters, roomConfigs, eventName, division, tournamen
         
         let teamIndex = 0;
         if (leftSlotAvailable && teamIndex < teamsInMatch.length) {
-          leftTeam = getTeamIndex(teamsInMatch[teamIndex]);
+          leftTeam = teamsInMatch[teamIndex];
           teamIndex++;
         }
         if (centerSlotAvailable && teamIndex < teamsInMatch.length) {
-          centerTeam = getTeamIndex(teamsInMatch[teamIndex]);
+          centerTeam = teamsInMatch[teamIndex];
           teamIndex++;
         }
         if (rightSlotAvailable && teamIndex < teamsInMatch.length) {
-          rightTeam = getTeamIndex(teamsInMatch[teamIndex]);
+          rightTeam = teamsInMatch[teamIndex];
           teamIndex++;
         }
         
@@ -581,21 +581,58 @@ document.addEventListener('DOMContentLoaded', () => {
     // Get matches per team
     const matchesPerTeam = parseInt(document.getElementById('matches').value, 10);
 
+    // Get tournament information for finals
+    const doFinals = document.getElementById('do-finals').checked;
+
     // Generate schedule
     const schedule = generateMatchSchedule(teams, rooms, matchesPerTeam);
+
+    // Generate finals info if needed
+    let finalsRounds = [];
+    if (doFinals) {
+      const finalRounds = calcTournament(teams, rooms);
+      const finalRoundNames = ["Semi-Final", "Consolation", "Finals"];
+      
+      finalsRounds = finalRounds.map((round, roundIdx) => {
+        const roundName = finalRoundNames[roundIdx] || `Final-Round-${roundIdx + 1}`;
+        
+        // Create room info for this finals round
+        const roomInfo = rooms.map(room => {
+          const isRoomUsed = round.some(r => r.name === room.name);
+          let teamsInRoom = 0;
+          
+          if (isRoomUsed) {
+            // Find the room in the round to get team count
+            const roomInRound = round.find(r => r.name === room.name);
+            teamsInRoom = roomInRound ? (roomInRound.capacity || 2) : 0;
+          }
+          
+          return {
+            name: room.name,
+            teams: teamsInRoom
+          };
+        });
+        
+        return {
+          name: roundName,
+          rooms: roomInfo
+        };
+      });
+    }
 
     console.log('Team Rosters:', teamRosters); // For debugging
     console.log('Room Configs:', roomConfigs); // For debugging
     console.log(JSON.stringify(schedule, null, 2)); // For debugging
+    console.log('Finals Rounds:', finalsRounds); // For debugging
 
     // Display schedule as HTML table
-    displaySchedule(schedule, rooms.map(r => r.name));
+    displaySchedule(schedule, rooms.map(r => r.name), finalsRounds);
     // Add CSV download button
     addCSVDownload(schedule, rooms.map(r => r.name), teamRosters, roomConfigs);
   });
 });
 
-function displaySchedule(schedule, rooms) {
+function displaySchedule(schedule, rooms, finalsRounds = []) {
   // Remove old table if exists
   const oldTable = document.getElementById('schedule-table');
   if (oldTable) oldTable.remove();
@@ -622,6 +659,8 @@ function displaySchedule(schedule, rooms) {
 
   // Table body
   const tbody = document.createElement('tbody');
+  
+  // Regular rounds
   schedule.forEach((round, i) => {
     const row = document.createElement('tr');
     const roundCell = document.createElement('td');
@@ -635,6 +674,22 @@ function displaySchedule(schedule, rooms) {
     });
     tbody.appendChild(row);
   });
+
+  // Finals rounds
+  finalsRounds.forEach(finalRound => {
+    const row = document.createElement('tr');
+    const roundCell = document.createElement('td');
+    roundCell.textContent = finalRound.name;
+    row.appendChild(roundCell);
+    rooms.forEach(room => {
+      const cell = document.createElement('td');
+      const roomInfo = finalRound.rooms.find(r => r.name === room);
+      cell.textContent = (roomInfo && roomInfo.teams > 0) ? `${roomInfo.teams} teams` : '-';
+      row.appendChild(cell);
+    });
+    tbody.appendChild(row);
+  });
+  
   table.appendChild(tbody);
 
   container.appendChild(table);
