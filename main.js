@@ -216,7 +216,7 @@ function generateRoundRobinSchedule(teams, rooms) {
   return schedule;// just for debugging, we're not going to duplicate matches matchesPerTeam times yet.
 }
 
-function calcTournament(teams, rooms) {
+function calcTournament(teams, rooms, eliminationType = 'Single Elimination') {
   // Not a scheduler, instead this one uses the number of teams and the room info to calculate the number of rounds needed.
   // Since the teams participating in a tournament depend on the results of previous rounds, we can't make a schedule in advance.
   // Instead, we're just calculating what the fewest number of rounds needed for a tournament is, and determining which rooms should be used.
@@ -225,24 +225,129 @@ function calcTournament(teams, rooms) {
   const sortedRooms = rooms.slice().sort((a, b) => (b.capacity || 2) - (a.capacity || 2));
 
   let rounds = [];
-  let remainingTeams = teams.length;
   
-  while (remainingTeams > 1) {
-    let round = [];
-    let teamsInRound = 0;
+  if (eliminationType === 'Single Elimination') {
+    let remainingTeams = teams.length;
     
-    // Fill rooms for this round
-    for (let i = 0; i < sortedRooms.length && teamsInRound < remainingTeams; i++) {
-      const room = sortedRooms[i];
-      const roomCapacity = room.capacity || 2;
-      if (teamsInRound + roomCapacity <= remainingTeams) {
-        round.push(room);
-        teamsInRound += roomCapacity;
+    while (remainingTeams > 1) {
+      let round = [];
+      let teamsInRound = 0;
+      
+      // Fill rooms for this round
+      for (let i = 0; i < sortedRooms.length && teamsInRound < remainingTeams; i++) {
+        const room = sortedRooms[i];
+        const roomCapacity = room.capacity || 2;
+        if (teamsInRound + roomCapacity <= remainingTeams) {
+          round.push(room);
+          teamsInRound += roomCapacity;
+        }
+      }
+      
+      rounds.push(round);
+      remainingTeams = Math.ceil(teamsInRound / 2); // Winners advance to next round
+    }
+  } else if (eliminationType === 'Double Elimination') {
+    // Double elimination has winners bracket and losers bracket
+    // Winners bracket: same as single elimination but losers go to losers bracket
+    // Losers bracket: losers from winners bracket play against each other, with additional elimination rounds
+    
+    let winnersRemaining = teams.length;
+    let losersRemaining = 0;
+    let roundNumber = 1;
+    
+    while (winnersRemaining > 1 || losersRemaining > 0) {
+      let round = [];
+      let teamsInRound = 0;
+      let roomsUsed = 0;
+      
+      // Calculate teams that need to play this round
+      let winnersThisRound = 0;
+      let losersThisRound = 0;
+      
+      if (winnersRemaining > 1) {
+        // Winners bracket matches
+        winnersThisRound = Math.floor(winnersRemaining / 2) * 2; // Even number for complete matches
+        if (winnersRemaining % 2 === 1) {
+          winnersThisRound = winnersRemaining - 1; // One team gets a bye
+        }
+      }
+      
+      if (losersRemaining > 1) {
+        // Losers bracket matches
+        losersThisRound = Math.floor(losersRemaining / 2) * 2;
+        if (losersRemaining % 2 === 1) {
+          losersThisRound = losersRemaining - 1; // One team gets a bye
+        }
+      } else if (losersRemaining === 1 && winnersRemaining === 1) {
+        // Final match: winner of losers bracket vs winner of winners bracket
+        losersThisRound = 1;
+        winnersThisRound = 1;
+      }
+      
+      let totalTeamsThisRound = winnersThisRound + losersThisRound;
+      
+      if (totalTeamsThisRound === 0) break;
+      
+      // Fill rooms for this round, accounting for both winners and losers bracket matches
+      for (let i = 0; i < sortedRooms.length && teamsInRound < totalTeamsThisRound; i++) {
+        const room = sortedRooms[i];
+        const roomCapacity = room.capacity || 2;
+        if (teamsInRound + roomCapacity <= totalTeamsThisRound) {
+          round.push(room);
+          teamsInRound += roomCapacity;
+          roomsUsed++;
+        }
+      }
+      
+      // If we can't fit all matches in available rooms, we need multiple rounds
+      if (teamsInRound < totalTeamsThisRound) {
+        // Priority goes to winners bracket, then losers bracket
+        let actualWinnersThisRound = Math.min(winnersThisRound, teamsInRound);
+        let actualLosersThisRound = Math.min(losersThisRound, teamsInRound - actualWinnersThisRound);
+        
+        rounds.push(round);
+        
+        // Update remaining teams based on what actually played
+        if (actualWinnersThisRound > 0) {
+          let newLosers = Math.floor(actualWinnersThisRound / 2);
+          winnersRemaining = winnersRemaining - actualWinnersThisRound + Math.ceil(actualWinnersThisRound / 2);
+          losersRemaining += newLosers;
+        }
+        
+        if (actualLosersThisRound > 0) {
+          losersRemaining = losersRemaining - actualLosersThisRound + Math.ceil(actualLosersThisRound / 2);
+        }
+      } else {
+        // All matches fit in this round
+        rounds.push(round);
+        
+        // Update remaining teams
+        if (winnersThisRound > 0) {
+          let newLosers = Math.floor(winnersThisRound / 2);
+          winnersRemaining = winnersRemaining - winnersThisRound + Math.ceil(winnersThisRound / 2);
+          losersRemaining += newLosers;
+        }
+        
+        if (losersThisRound > 0) {
+          losersRemaining = losersRemaining - losersThisRound + Math.ceil(losersThisRound / 2);
+        }
+        
+        // Special case: if we just had the final match
+        if (winnersRemaining === 1 && losersRemaining === 1 && winnersThisRound === 1 && losersThisRound === 1) {
+          // The match is complete, but in double elimination, if the loser bracket winner beats the winner bracket winner,
+          // they need to play again. For simplicity, we'll assume one final match is sufficient.
+          break;
+        }
+      }
+      
+      roundNumber++;
+      
+      // Safety break to prevent infinite loops
+      if (roundNumber > teams.length * 2) {
+        console.warn('Double elimination calculation exceeded expected rounds, breaking');
+        break;
       }
     }
-    
-    rounds.push(round);
-    remainingTeams = Math.ceil(teamsInRound / 2); // Winners advance to next round
   }
 
   return rounds;
@@ -339,12 +444,11 @@ function genCSVSchedule(teamRosters, rooms, eventName, division, tournament, doF
         
         // There is always a left and right slot, but center is only included if we need capacity for 3 teams.
         if (teamsInMatch.length > 2) {
-          centerTeam = getTeamIndex(teamsInMatch[1]);
-          teamIndex++;
+          centerTeam = teamsInMatch[1];
         }
-        leftTeam = getTeamIndex(teamsInMatch[0]);
-        rightTeam = getTeamIndex(teamsInMatch[teamsInMatch.length - 1]); // If 2 teams, this will be the second team, if 3 teams, this will be the third team.
-        
+        leftTeam = teamsInMatch[0];
+        rightTeam = teamsInMatch[teamsInMatch.length - 1];
+
         csvRow += leftTeam + ","; // Room left team number
         csvRow += centerTeam + ","; // Room center team number  
         csvRow += rightTeam + ","; // Room right team number
@@ -360,13 +464,23 @@ function genCSVSchedule(teamRosters, rooms, eventName, division, tournament, doF
     }
     
     // Now that the tournament rounds are done, see if we're doing finals also.
-    if (doFinals) {
+    if (doFinals && doFinals !== 'None') {
       // Use calcTournament to determine how many rounds of finals this room is being used for.
-      const finalRounds = calcTournament(teams, rooms);
-      let finalRoundNames = ["Semi-Final", "Consolation", "Finals"];
+      const finalRounds = calcTournament(teams, rooms, doFinals);
       
       for (let roundIdx = 0; roundIdx < finalRounds.length; roundIdx++) {
         const finalRound = finalRounds[roundIdx];
+        
+        // Generate correct round names: last is "Finals", second-last is "Consolation", rest are "Semi-Final"
+        let roundName;
+        const totalRounds = finalRounds.length;
+        if (roundIdx === totalRounds - 1) {
+          roundName = "Finals";
+        } else if (roundIdx === totalRounds - 2) {
+          roundName = "Consolation";
+        } else {
+          roundName = "Semi-Final";
+        }
         
         // Check if current room is used in this final round
         const isRoomUsed = finalRound.some(room => room.name === roomName);
@@ -376,7 +490,7 @@ function genCSVSchedule(teamRosters, rooms, eventName, division, tournament, doF
           csvRow += eventName + ","; // Event name
           csvRow += division + ","; // Division
           csvRow += roomName + ","; // Room number
-          csvRow += (finalRoundNames[roundIdx] || `Final-Round-${roundIdx + 1}`) + ","; // Round name
+          csvRow += roundName + ","; // Round name
           
           // In finals, team assignments are blank as noted in comments
           csvRow += ","; // Room left team number - blank
@@ -490,17 +604,13 @@ document.getElementById('add-room').addEventListener('click', (e) => {
       const roomName = nameInput.value.trim();
       
       if (roomName) {
-        const leftCheckbox = row.querySelector('input[name="room-left"]');
-        const centerCheckbox = row.querySelector('input[name="room-center"]');
-        const rightCheckbox = row.querySelector('input[name="room-right"]');
-        // Calculate capacity for existing schedule generation
-        const capacity = (leftCheckbox?.checked ? 1 : 0) + 
-                        (centerCheckbox?.checked ? 1 : 0) + 
-                        (rightCheckbox?.checked ? 1 : 0);
+        const threeTeamToggle = row.querySelector('input[name="room-3team"]');
+        // Calculate capacity based on 3-team toggle
+        const capacity = threeTeamToggle?.checked ? 3 : 2;
         
         rooms.push({
           name: roomName,
-          capacity: capacity || 2 // Default to 2 if no slots are checked
+          capacity: capacity
         });
       }
     });
@@ -508,8 +618,8 @@ document.getElementById('add-room').addEventListener('click', (e) => {
     // Get matches per team
     const matchesPerTeam = parseInt(document.getElementById('matches').value, 10);
 
-    // Get tournament information for finals
-    const doFinals = document.getElementById('do-finals').checked;
+    // Get tournament information for finals from radio button (options are "None", "Single Elimination", "Double Elimination")
+    let doFinals = document.querySelector('input[name="do-finals"]:checked').value;
 
     // check that all teams have at least one member
     if (teamRosters.some(roster => roster.length < 2)) {
@@ -522,12 +632,20 @@ document.getElementById('add-room').addEventListener('click', (e) => {
 
     // Generate finals info if needed
     let finalsRounds = [];
-    if (doFinals) {
-      const finalRounds = calcTournament(teams, rooms);
-      const finalRoundNames = ["Semi-Final", "Consolation", "Finals"];
+    if (doFinals != 'None') {
+      const finalRounds = calcTournament(teams, rooms, doFinals);
       
       finalsRounds = finalRounds.map((round, roundIdx) => {
-        const roundName = finalRoundNames[roundIdx] || `Final-Round-${roundIdx + 1}`;
+        // Generate correct round names: last is "Finals", second-last is "Consolation", rest are "Semi-Final"
+        let roundName;
+        const totalRounds = finalRounds.length;
+        if (roundIdx === totalRounds - 1) {
+          roundName = "Finals";
+        } else if (roundIdx === totalRounds - 2) {
+          roundName = "Consolation";
+        } else {
+          roundName = "Semi-Final";
+        }
         
         // Create room info for this finals round
         const roomInfo = rooms.map(room => {
@@ -640,7 +758,7 @@ function addCSVDownload(schedule, rooms, teamRosters, rooms) {
   const eventName = document.getElementById('event-name').value || 'Event';
   const division = document.getElementById('division').value || 'Division';
   const tournament = document.getElementById('tournament-name').value || 'Tournament';
-  const doFinals = document.getElementById('do-finals').checked;
+  const doFinals = document.querySelector('input[name="do-finals"]:checked').value;
   const finalsTournament = document.getElementById('finals-tournament-name').value || tournament;
   const matchesPerTeam = parseInt(document.getElementById('matches').value, 10) || 1;
 
