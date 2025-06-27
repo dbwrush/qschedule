@@ -142,6 +142,13 @@ main {
   /* width: calc(100% - 132px); */
   width: 100%;
   /* margin: 20px auto; */
+  transition: transform 0.2s, box-shadow 0.2s, border 0.2s;
+}
+
+.tile:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 40px var(--hover-glow), 0 2px 0 var(--tile-border), 0 0 15px var(--glow-color-1);
+  border: 1.5px solid var(--glow-color-2);
 }
 
 .tile.small {
@@ -190,7 +197,7 @@ form label {
   margin-bottom: 0.5em;
   background: var(--input-background);
   color: var(--text-color);
-  transition: border 0.2s, background 0.2s, box-shadow 0.2s;
+  transition: border 0.2s, background 0.2s, box-shadow 0.2s, transform 0.2s;
   box-shadow: 0 0 0 0 var(--glow-color-1);
   flex: 1 1;
 }
@@ -200,12 +207,55 @@ input[type="number"] {
   flex: 0;
 }
 
-.teams input:hover, .rooms input:hover, input[type="number"]:hover {
+.setting input:hover, .teams input:hover, .rooms input:hover, input[type="number"]:hover {
   border: 1.5px solid var(--glow-color-2);
   outline: none;
   background: #22344a;
   box-shadow: 0 0 8px var(--hover-glow), 0 0 12px var(--glow-color-1);
   transform: translateY(-1px);
+}
+
+/* Custom circular glow for radio buttons */
+input[type="radio"] {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--tile-border);
+  border-radius: 50%;
+  background: var(--input-background);
+  cursor: pointer;
+  position: relative;
+  transition: border 0.2s, box-shadow 0.2s, transform 0.2s;
+  flex-shrink: 0; /* Prevent radio buttons from shrinking */
+  flex-grow: 0; /* Prevent radio buttons from growing */
+  flex-basis: auto; /* Reset flex-basis */
+  margin: 0;
+  padding: 0;
+}
+
+input[type="radio"]:hover {
+  border: 2px solid var(--glow-color-2);
+  box-shadow: 0 0 8px var(--hover-glow), 0 0 12px var(--glow-color-1);
+  transform: scale(1.1);
+}
+
+input[type="radio"]:checked {
+  border: 2px solid var(--glow-color-1);
+  background: var(--glow-color-1);
+}
+
+input[type="radio"]:checked::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: white;
 }
 
 button {
@@ -442,14 +492,6 @@ table#schedule-table tr:last-child td {
 .setting-inner-2 {
   flex-direction: column;
 }
- input[type="radio"] {
-  margin: 0;
-  padding: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 40px;
- }
  .radio-container {
   display: flex;
   flex-direction: column;
@@ -572,6 +614,17 @@ table#schedule-table tr:last-child td {
   border-radius: 10px;
   background: #2c536450;
   width: 250px;
+  transition: transform 0.2s, box-shadow 0.2s, border 0.2s;
+}
+
+.team-name {
+  width: 100%;
+}
+
+.team-section:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px var(--hover-glow), 0 0 8px var(--glow-color-1);
+  border: 1px solid var(--glow-color-2);
 }
 
 .team-header {
