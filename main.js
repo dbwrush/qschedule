@@ -58,7 +58,7 @@ function generateMatchSchedule(teams, rooms, matchesPerTeam) {
   return formatted;
 }
 
-function generateRoundRobinSchedule(teamRoster, roomsConfig) {
+function generateRoundRobinSchedule(teams, rooms) {
   // Teams: list of team names
   // Rooms: list of room names
   // Matches per team: number of times each team should see each other team
@@ -248,7 +248,7 @@ function calcTournament(teams, rooms) {
   return rounds;
 }
 
-function genCSVSchedule(teamRosters, roomConfigs, eventName, division, tournament, doFinals, finalsTournament, matchesPerTeam) {
+function genCSVSchedule(teamRosters, roomConfigs, eventName, division, tournament, doFinals, finalsTournament, matchesPerTeam, schedule) {
   let output = "";
 
   // Begin by printing a team roster. Column 1 = team name, Column 2 is quizzer name.
@@ -305,7 +305,7 @@ function genCSVSchedule(teamRosters, roomConfigs, eventName, division, tournamen
     rooms.push(room);
   }
 
-  let schedule = generateMatchSchedule(teams, rooms, matchesPerTeam);
+  // Use the provided schedule instead of generating a new one
 
   // Helper function to get current timestamp
   function getCurrentTimestamp() {
@@ -427,13 +427,33 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('add-team').addEventListener('click', (e) => {
     e.preventDefault();
     const teamsDiv = document.querySelector('.teams');
-    const input = document.createElement('input');
-    input.type = 'text';
-    input.id = 'team';
-    input.name = 'teams';
-    input.placeholder = 'Team Name';
-    input.required = true;
-    teamsDiv.appendChild(input);
+    const teamSection = document.createElement('div');
+    teamSection.className = 'team-section';
+    
+    const teamHeader = document.createElement('div');
+    teamHeader.className = 'team-header';
+    const teamNameInput = document.createElement('input');
+    teamNameInput.type = 'text';
+    teamNameInput.className = 'team-name';
+    teamNameInput.name = 'team-names';
+    teamNameInput.placeholder = 'Team Name';
+    teamNameInput.required = true;
+    teamHeader.appendChild(teamNameInput);
+    
+    const teamMembers = document.createElement('div');
+    teamMembers.className = 'team-members';
+    for (let i = 1; i <= 5; i++) {
+      const memberInput = document.createElement('input');
+      memberInput.type = 'text';
+      memberInput.className = 'team-member';
+      memberInput.name = 'team-members';
+      memberInput.placeholder = `Team Member ${i}`;
+      teamMembers.appendChild(memberInput);
+    }
+    
+    teamSection.appendChild(teamHeader);
+    teamSection.appendChild(teamMembers);
+    teamsDiv.appendChild(teamSection);
   });
 
   // Add Room button functionality
@@ -442,56 +462,136 @@ document.addEventListener('DOMContentLoaded', () => {
     const roomsDiv = document.querySelector('.rooms');
     const roomRow = document.createElement('div');
     roomRow.className = 'room-row';
+    
     const input = document.createElement('input');
     input.type = 'text';
     input.id = 'room';
     input.name = 'rooms';
     input.placeholder = 'Room Name';
     input.required = true;
-    const capInput = document.createElement('input');
-    capInput.type = 'number';
-    capInput.className = 'room-capacity';
-    capInput.name = 'room-capacities';
-    capInput.min = 2;
-    capInput.max = 10;
-    capInput.value = 2;
-    capInput.required = true;
-    capInput.style.width = '5em';
-    capInput.style.marginLeft = '0.5em';
-    capInput.placeholder = 'Capacity';
+    
+    const roomSlots = document.createElement('div');
+    roomSlots.className = 'room-slots';
+    
+    // Left slot
+    const leftLabel = document.createElement('label');
+    const leftCheckbox = document.createElement('input');
+    leftCheckbox.type = 'checkbox';
+    leftCheckbox.className = 'room-slot';
+    leftCheckbox.name = 'room-left';
+    leftCheckbox.checked = true; // Default to checked
+    leftLabel.appendChild(leftCheckbox);
+    leftLabel.appendChild(document.createTextNode(' Left'));
+    
+    // Center slot
+    const centerLabel = document.createElement('label');
+    const centerCheckbox = document.createElement('input');
+    centerCheckbox.type = 'checkbox';
+    centerCheckbox.className = 'room-slot';
+    centerCheckbox.name = 'room-center';
+    centerCheckbox.checked = true; // Default to checked
+    centerLabel.appendChild(centerCheckbox);
+    centerLabel.appendChild(document.createTextNode(' Center'));
+    
+    // Right slot
+    const rightLabel = document.createElement('label');
+    const rightCheckbox = document.createElement('input');
+    rightCheckbox.type = 'checkbox';
+    rightCheckbox.className = 'room-slot';
+    rightCheckbox.name = 'room-right';
+    rightCheckbox.checked = false; // Default to unchecked
+    rightLabel.appendChild(rightCheckbox);
+    rightLabel.appendChild(document.createTextNode(' Right'));
+    
+    roomSlots.appendChild(leftLabel);
+    roomSlots.appendChild(centerLabel);
+    roomSlots.appendChild(rightLabel);
+    
     roomRow.appendChild(input);
-    roomRow.appendChild(capInput);
+    roomRow.appendChild(roomSlots);
     roomsDiv.appendChild(roomRow);
   });
 
   // Handle form submission
   document.querySelector('form').addEventListener('submit', (e) => {
     e.preventDefault();
-    // Get all team names
-    const teamInputs = document.querySelectorAll('input[name="teams"]');
-    const teams = Array.from(teamInputs).map(input => input.value.trim()).filter(Boolean);
-    // Get all room names and capacities
+    
+    // Get team data with members
+    const teamSections = document.querySelectorAll('.team-section');
+    const teamRosters = [];
+    
+    teamSections.forEach(section => {
+      const teamNameInput = section.querySelector('.team-name');
+      const teamName = teamNameInput.value.trim();
+      
+      if (teamName) {
+        const teamRoster = [teamName]; // First element is team name
+        const memberInputs = section.querySelectorAll('.team-member');
+        
+        memberInputs.forEach(input => {
+          const memberName = input.value.trim();
+          if (memberName) {
+            teamRoster.push(memberName);
+          }
+        });
+        
+        teamRosters.push(teamRoster);
+      }
+    });
+    
+    // Extract just team names for the existing schedule generation
+    const teams = teamRosters.map(roster => roster[0]);
+    
+    // Get all room names and configurations
     const roomRows = document.querySelectorAll('.rooms .room-row');
-    const rooms = Array.from(roomRows).map(row => {
+    const roomConfigs = [];
+    const rooms = []; // For existing schedule generation
+    
+    roomRows.forEach(row => {
       const nameInput = row.querySelector('input[name="rooms"]');
-      const capInput = row.querySelector('input[name="room-capacities"]');
-      return {
-        name: nameInput.value.trim(),
-        capacity: parseInt(capInput.value, 10)
-      };
-    }).filter(room => room.name);
+      const roomName = nameInput.value.trim();
+      
+      if (roomName) {
+        const leftCheckbox = row.querySelector('input[name="room-left"]');
+        const centerCheckbox = row.querySelector('input[name="room-center"]');
+        const rightCheckbox = row.querySelector('input[name="room-right"]');
+        
+        // Create roomConfig array: [roomName, leftSlot, centerSlot, rightSlot]
+        const roomConfig = [
+          roomName,
+          leftCheckbox ? leftCheckbox.checked : false,
+          centerCheckbox ? centerCheckbox.checked : false,
+          rightCheckbox ? rightCheckbox.checked : false
+        ];
+        
+        roomConfigs.push(roomConfig);
+        
+        // Calculate capacity for existing schedule generation
+        const capacity = (leftCheckbox?.checked ? 1 : 0) + 
+                        (centerCheckbox?.checked ? 1 : 0) + 
+                        (rightCheckbox?.checked ? 1 : 0);
+        
+        rooms.push({
+          name: roomName,
+          capacity: capacity || 2 // Default to 2 if no slots are checked
+        });
+      }
+    });
+    
     // Get matches per team
     const matchesPerTeam = parseInt(document.getElementById('matches').value, 10);
 
     // Generate schedule
     const schedule = generateMatchSchedule(teams, rooms, matchesPerTeam);
 
+    console.log('Team Rosters:', teamRosters); // For debugging
+    console.log('Room Configs:', roomConfigs); // For debugging
     console.log(JSON.stringify(schedule, null, 2)); // For debugging
 
     // Display schedule as HTML table
     displaySchedule(schedule, rooms.map(r => r.name));
     // Add CSV download button
-    addCSVDownload(schedule, rooms.map(r => r.name));
+    addCSVDownload(schedule, rooms.map(r => r.name), teamRosters, roomConfigs);
   });
 });
 
@@ -540,7 +640,7 @@ function displaySchedule(schedule, rooms) {
   container.appendChild(table);
 }
 
-function addCSVDownload(schedule, rooms) {
+function addCSVDownload(schedule, rooms, teamRosters, roomConfigs) {
   // Remove old button if exists
   const csvDiv = document.getElementById('csv');
   if (!csvDiv) return;
@@ -548,32 +648,40 @@ function addCSVDownload(schedule, rooms) {
   const oldBtn = document.getElementById('download-csv');
   if (oldBtn) oldBtn.remove();
 
-  // Build CSV content
-  let csv = ['Round,' + rooms.join(',')];
-  schedule.forEach((round, i) => {
-    const row = [
-      `Round ${i + 1}`,
-      ...rooms.map(room => {
-        const match = round[room];
-        return (match && match.length) ? match.join(' vs ') : '-';
-      })
-    ];
-    csv.push(row.join(','));
-  });
-  const csvContent = csv.join('\r\n');
+  // Get tournament information from the form
+  const eventName = document.getElementById('event-name').value || 'Event';
+  const division = document.getElementById('division').value || 'Division';
+  const tournament = document.getElementById('tournament-name').value || 'Tournament';
+  const doFinals = document.getElementById('do-finals').checked;
+  const finalsTournament = document.getElementById('finals-tournament-name').value || tournament;
+  const matchesPerTeam = parseInt(document.getElementById('matches').value, 10) || 1;
 
   // Create download button
   const btn = document.createElement('button');
   btn.id = 'download-csv';
-  btn.textContent = 'Download CSV';
+  btn.textContent = 'Download CSV Schedule';
   btn.style.marginTop = '1em';
   btn.addEventListener('click', (e) => {
     e.preventDefault();
+    
+    // Generate CSV content using genCSVSchedule
+    const csvContent = genCSVSchedule(
+      teamRosters, 
+      roomConfigs, 
+      eventName, 
+      division, 
+      tournament, 
+      doFinals, 
+      finalsTournament, 
+      matchesPerTeam, 
+      schedule
+    );
+    
     const blob = new Blob([csvContent], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'schedule.csv';
+    a.download = 'tournament-schedule.csv';
     csvDiv.appendChild(a);
     a.click();
     setTimeout(() => {

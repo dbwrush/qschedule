@@ -24,25 +24,73 @@
                     <label for="matches">Matches per Team</label>
                     <input type="number" id="matches" name="matches" min="1" max="100" value="1" required="true">
                 </div>
-                <!-- Remove global Teams per Round input -->
+                <div class="setting">
+                    <label for="event-name">Event Name</label>
+                    <input type="text" id="event-name" name="event-name" placeholder="Event Name" required="true">
+                </div>
+                <div class="setting">
+                    <label for="tournament-name">Tournament Name</label>
+                    <input type="text" id="tournament-name" name="tournament-name" placeholder="Tournament Name" required="true">
+                </div>
+                <div class="setting">
+                    <label for="division">Division</label>
+                    <input type="text" id="division" name="division" placeholder="Division (e.g., Experienced, Novice)" required="true">
+                </div>
             </div>
 
             <form action="">
-                <label for="teams">Team Names:</label>
+                <label for="teams">Teams:</label>
                 <div class="teams">
-                    <input type="text" id="team" name="teams" placeholder="Team Name" required="true">
-                    <input type="text" id="team" name="teams" placeholder="Team Name" required="true">
+                    <div class="team-section">
+                        <div class="team-header">
+                            <input type="text" class="team-name" name="team-names" placeholder="Team Name" required="true">
+                        </div>
+                        <div class="team-members">
+                            <input type="text" class="team-member" name="team-members" placeholder="Team Member 1">
+                            <input type="text" class="team-member" name="team-members" placeholder="Team Member 2">
+                            <input type="text" class="team-member" name="team-members" placeholder="Team Member 3">
+                            <input type="text" class="team-member" name="team-members" placeholder="Team Member 4">
+                            <input type="text" class="team-member" name="team-members" placeholder="Team Member 5">
+                        </div>
+                    </div>
+                    <div class="team-section">
+                        <div class="team-header">
+                            <input type="text" class="team-name" name="team-names" placeholder="Team Name" required="true">
+                        </div>
+                        <div class="team-members">
+                            <input type="text" class="team-member" name="team-members" placeholder="Team Member 1">
+                            <input type="text" class="team-member" name="team-members" placeholder="Team Member 2">
+                            <input type="text" class="team-member" name="team-members" placeholder="Team Member 3">
+                            <input type="text" class="team-member" name="team-members" placeholder="Team Member 4">
+                            <input type="text" class="team-member" name="team-members" placeholder="Team Member 5">
+                        </div>
+                    </div>
                 </div>
                 <button id="add-team">Add Team</button>
 
-                <label for="rooms">Room Names and Capacity:</label>
+                <label for="rooms">Room Names and Configuration:</label>
                 <div class="rooms">
                     <div class="room-row">
                         <input type="text" id="room" name="rooms" placeholder="Room Name" required="true">
-                        <input type="number" class="room-capacity" name="room-capacities" min="2" max="10" value="2" required="true" style="width: 5em; margin-left: 0.5em;" placeholder="Capacity">
+                        <div class="room-slots">
+                            <label><input type="checkbox" class="room-slot" name="room-left" checked> Left</label>
+                            <label><input type="checkbox" class="room-slot" name="room-center" checked> Center</label>
+                            <label><input type="checkbox" class="room-slot" name="room-right"> Right</label>
+                        </div>
                     </div>
                 </div>
                 <button id="add-room">Add Room</button>
+
+                <div class="settings-row">
+                    <div class="setting">
+                        <label for="do-finals">Include Finals</label>
+                        <input type="checkbox" id="do-finals" name="do-finals">
+                    </div>
+                    <div class="setting">
+                        <label for="finals-tournament-name">Finals Tournament Name</label>
+                        <input type="text" id="finals-tournament-name" name="finals-tournament-name" placeholder="Finals Tournament Name">
+                    </div>
+                </div>
 
                 <br>
                 
