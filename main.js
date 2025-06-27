@@ -248,7 +248,7 @@ function calcTournament(teams, rooms) {
   return rounds;
 }
 
-function genCSVSchedule(teamRosters, roomConfigs, eventName, division, tournament, doFinals, finalsTournament, matchesPerTeam, schedule) {
+function genCSVSchedule(teamRosters, rooms, eventName, division, tournament, doFinals, finalsTournament, matchesPerTeam, schedule) {
   let output = "";
 
   // Begin by printing a team roster. Column 1 = team name, Column 2 is quizzer name.
@@ -258,7 +258,7 @@ function genCSVSchedule(teamRosters, roomConfigs, eventName, division, tournamen
     }
   }
 
-  // RoomConfigs is an array of rooms. Each room is also an array, Index 0 is the name.
+  // rooms is an array of rooms. Each room is also an array, Index 0 is the name.
   // Index 1 - 3 are a true or false depending on if that room can have a team in that slot.
   // EX: A room that can have a team on left and center but not right may look like: ["Room 3", true, true, false]
 
@@ -290,21 +290,6 @@ function genCSVSchedule(teamRosters, roomConfigs, eventName, division, tournamen
     teams.push(teamRosters[i][0]);
   }
 
-  let rooms = [];
-  for (let i = 0; i < roomConfigs.length; i++) {
-    let room = {}; // Initialize room object
-    // Count how many slot positions in the roomConfig are true
-    let capacity = 0;
-    for (let j = 1; j < roomConfigs[i].length; j++) { // Start at 1, skip room name
-      if (roomConfigs[i][j] === true) {
-        capacity++;
-      }
-    }
-    room.name = roomConfigs[i][0];
-    room.capacity = capacity;
-    rooms.push(room);
-  }
-
   // Use the provided schedule instead of generating a new one
 
   // Helper function to get current timestamp
@@ -324,9 +309,9 @@ function genCSVSchedule(teamRosters, roomConfigs, eventName, division, tournamen
   }
 
   // Add each room's schedule to the output.
-  for (let i = 0; i < roomConfigs.length; i++) {  // Iterate over rooms
-    const currentRoom = roomConfigs[i];
-    const roomName = currentRoom[0];
+  for (let i = 0; i < rooms.length; i++) {  // Iterate over rooms
+    const currentRoom = rooms[i];
+    const roomName = currentRoom.name;
     
     for (let j = 0; j < schedule.length; j++) { // Iterate over the rounds
       let round = schedule[j];
@@ -344,29 +329,21 @@ function genCSVSchedule(teamRosters, roomConfigs, eventName, division, tournamen
         csvRow += roundNumber + ","; // Round number
         
         // Get the room configuration to determine which slots are available
-        const roomConfig = roomConfigs[i]; // currentRoom
-        const leftSlotAvailable = roomConfig[1];
-        const centerSlotAvailable = roomConfig[2];
-        const rightSlotAvailable = roomConfig[3];
-        
+        const room = rooms[i]; // currentRoom
+        const capacity = room.capacity || 2; // Default capacity is 2 if not specified
+
         // Assign teams to available slots in order
         let leftTeam = "";
         let centerTeam = "";
         let rightTeam = "";
         
-        let teamIndex = 0;
-        if (leftSlotAvailable && teamIndex < teamsInMatch.length) {
-          leftTeam = teamsInMatch[teamIndex];
+        // There is always a left and right slot, but center is only included if we need capacity for 3 teams.
+        if (teamsInMatch.length > 2) {
+          centerTeam = getTeamIndex(teamsInMatch[1]);
           teamIndex++;
         }
-        if (centerSlotAvailable && teamIndex < teamsInMatch.length) {
-          centerTeam = teamsInMatch[teamIndex];
-          teamIndex++;
-        }
-        if (rightSlotAvailable && teamIndex < teamsInMatch.length) {
-          rightTeam = teamsInMatch[teamIndex];
-          teamIndex++;
-        }
+        leftTeam = getTeamIndex(teamsInMatch[0]);
+        rightTeam = getTeamIndex(teamsInMatch[teamsInMatch.length - 1]); // If 2 teams, this will be the second team, if 3 teams, this will be the third team.
         
         csvRow += leftTeam + ","; // Room left team number
         csvRow += centerTeam + ","; // Room center team number  
@@ -544,7 +521,6 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Get all room names and configurations
     const roomRows = document.querySelectorAll('.rooms .room-row');
-    const roomConfigs = [];
     const rooms = []; // For existing schedule generation
     
     roomRows.forEach(row => {
@@ -555,17 +531,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const leftCheckbox = row.querySelector('input[name="room-left"]');
         const centerCheckbox = row.querySelector('input[name="room-center"]');
         const rightCheckbox = row.querySelector('input[name="room-right"]');
-        
-        // Create roomConfig array: [roomName, leftSlot, centerSlot, rightSlot]
-        const roomConfig = [
-          roomName,
-          leftCheckbox ? leftCheckbox.checked : false,
-          centerCheckbox ? centerCheckbox.checked : false,
-          rightCheckbox ? rightCheckbox.checked : false
-        ];
-        
-        roomConfigs.push(roomConfig);
-        
         // Calculate capacity for existing schedule generation
         const capacity = (leftCheckbox?.checked ? 1 : 0) + 
                         (centerCheckbox?.checked ? 1 : 0) + 
@@ -621,14 +586,14 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     console.log('Team Rosters:', teamRosters); // For debugging
-    console.log('Room Configs:', roomConfigs); // For debugging
+    console.log('Rooms:', rooms); // For debugging
     console.log(JSON.stringify(schedule, null, 2)); // For debugging
     console.log('Finals Rounds:', finalsRounds); // For debugging
 
     // Display schedule as HTML table
     displaySchedule(schedule, rooms.map(r => r.name), finalsRounds);
     // Add CSV download button
-    addCSVDownload(schedule, rooms.map(r => r.name), teamRosters, roomConfigs);
+    addCSVDownload(schedule, rooms.map(r => r.name), teamRosters, rooms);
   });
 });
 
@@ -695,7 +660,7 @@ function displaySchedule(schedule, rooms, finalsRounds = []) {
   container.appendChild(table);
 }
 
-function addCSVDownload(schedule, rooms, teamRosters, roomConfigs) {
+function addCSVDownload(schedule, rooms, teamRosters, rooms) {
   // Remove old button if exists
   const csvDiv = document.getElementById('csv');
   if (!csvDiv) return;
@@ -722,7 +687,7 @@ function addCSVDownload(schedule, rooms, teamRosters, roomConfigs) {
     // Generate CSV content using genCSVSchedule
     const csvContent = genCSVSchedule(
       teamRosters, 
-      roomConfigs, 
+      rooms,
       eventName, 
       division, 
       tournament, 
