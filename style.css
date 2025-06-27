@@ -158,7 +158,7 @@ form label {
   margin-bottom: 0.5em;
 }
 
-.teams input, .rooms input, input[type="number"] {
+.setting input, .teams input, .rooms input, input[type="number"] {
   padding: 0.5em 0.8em;
   border: 1.5px solid var(--tile-border);
   border-radius: 7px;
@@ -342,4 +342,15 @@ table#schedule-table tr:last-child td {
 
 .footer a {
     color: #3b82f6;
+}
+
+.team-members {
+  padding-left: 50px;
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 20px;
+}
+
+.different {
+  margin-bottom: 0.5rem;
 }
