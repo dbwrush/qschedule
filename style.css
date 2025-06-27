@@ -31,6 +31,8 @@ body {
   min-height: calc(100vh - 24px - 89px); /* Ensure body takes full height minus header */
   display: flex;
   flex-direction: column;
+  align-items: center;
+  justify-content: center;
   font-family: inherit;
   background: var(--background-gradient);
   background-position: fixed;
@@ -111,7 +113,7 @@ body {
 main {
   flex: 1; /* Allow the main content to expand and push the footer down */
   display: flex;
-  flex-direction: column;
+  /* flex-direction: column; */
   min-height: 100%;
   height: auto;
   min-height: calc(100vh - 57px - 89px); /* Ensure the main container fills the body */
@@ -121,20 +123,35 @@ main {
 .container {
   display: flex;
   padding: 1rem;
-
+  flex-wrap: wrap;
+  flex-direction: row;
+  /* align-items: center; */
+  gap: 20px;
+  max-width: 1320px;
 }
 
 .tile {
   background: var(--tile-background);
   max-width: 1600px;
-  margin: auto;
+  /* margin: auto; */
   object-fit: content;
   padding: 2em 2.5em 2.5em 2.5em;
   border-radius: 18px;
   box-shadow: 0 4px 32px var(--hover-glow), 0 1.5px 0 var(--tile-border);
   border: 1.5px solid var(--tile-border);
-  width: calc(100% - 132px);
-  margin: 20px auto;
+  /* width: calc(100% - 132px); */
+  width: 100%;
+  /* margin: 20px auto; */
+}
+
+.tile.small {
+  width: fit-content;
+  flex: 1 1 40%;
+  /* gap: 20px; */
+}
+
+.tile.btn {
+  text-align: center;
 }
 
 h1 {
@@ -158,6 +175,11 @@ form label {
   flex-wrap: wrap;
   gap: 1rem;
   margin: 1em 0;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  /* justify-content: space-between; */
+  gap: 50px;
 }
 
 .setting input, .teams input, .rooms input, input[type="number"] {
@@ -198,10 +220,11 @@ button {
   letter-spacing: 1px;
   /* box-shadow: 0 0 4px rgba(0, 0, 0, 0.5); */
   box-shadow: 0 0 3px var(--hover-glow), 0 0 5px var(--glow-color-1);
-  margin: 0.5rem 0 1.5rem 0;
+  margin: 0.5rem 0 0 0;
   width: 100%;
   box-sizing: border-box;
   cursor: pointer;
+  max-width: 260px;
   transition: box-shadow 0.3s ease, transform 0.3s ease, background 0.2s, color 0.2s, border 0.2s;
 }
 
@@ -210,6 +233,14 @@ button:hover {
   color: #fff;
   border: 1px solid var(--glow-color-2);
   transform: translateY(-2px);
+}
+
+#submit{
+  width: 100%;
+  margin: 0;
+  display: block;
+  font-weight: bold;
+  max-width: 100%;
 }
 
 table#schedule-table {
@@ -292,8 +323,16 @@ table#schedule-table tr:last-child td {
   display: flex;
   gap: 2em;
   justify-content: center;
+  flex-direction: column;
   margin-bottom: 1.5em;
   flex-wrap: wrap;
+}
+
+.settings-row.second {
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  height: 100%;
 }
 
 @media (max-width: 600px) {
@@ -348,10 +387,11 @@ table#schedule-table tr:last-child td {
 }
 
 .team-members {
-  padding-left: 50px;
+  /* padding-left: 50px; */
   display: flex;
-  gap: 1rem;
-  margin-bottom: 20px;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: -10px;
   flex-wrap: wrap;
 }
 
@@ -388,6 +428,7 @@ table#schedule-table tr:last-child td {
 #Tournament-Settings {
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: 1rem;
 } 
 .setting-inner, .setting-inner-2 {
@@ -395,8 +436,8 @@ table#schedule-table tr:last-child td {
   /* width: 100%; */
   display: flex;
   gap: 0.5rem;
-  align-items: flex-start;
-  justify-content: left;
+  align-items: center;
+  justify-content: flex-start;
 }
 .setting-inner-2 {
   flex-direction: column;
@@ -404,6 +445,16 @@ table#schedule-table tr:last-child td {
  input[type="radio"] {
   margin: 0;
   padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+ }
+ .radio-container {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-start;
  }
 
 
@@ -461,4 +512,86 @@ table#schedule-table tr:last-child td {
   font-size: 1rem;
   vertical-align: middle;
   user-select: none;
+}
+
+
+/* Remove Team Button */
+.remove-team-btn {
+  transition: background 0.2s, color 0.2s;
+}
+.remove-team-btn:hover {
+  /* background: #e74c3c; */
+  color: #fff;
+}
+
+
+/* Remove Team Button */
+.remove-team-btn, .remove-room-btn {
+  color: #fff;
+  border: 1.5px solid var(--tile-border);
+  /* background: var(--glow-color-2); */
+  border-radius: 5px;
+  width: 35px;
+  height: 35px;
+  font-size: 1rem;
+  font-weight: bold;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  margin-left: 8px;
+  margin-top: 0;
+  padding: 0;
+  box-shadow: var(--hover-glow), 0 1px 0 var(--tile-border);
+  transition: background 0.2s, color 0.2s, box-shadow 0.2s, transform 0.1s;
+  line-height: 1;
+}
+
+.remove-team-btn:hover, .remove-room-btn:hover, .remove-team-btn:focus, .remove-room-btn:focus {
+  /* background: #e74c3c; */
+  color: #fff;
+  /* box-shadow: 0 4px 12px rgba(231,76,60,0.25); */
+  transform: scale(1.12);
+  outline: none;
+}
+
+.room-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 10px;
+  width: 100%;
+}
+
+.team-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0px;
+  padding: 5px;
+  border: 1px solid var(--tile-border);
+  border-radius: 10px;
+  background: #2c536450;
+  width: 250px;
+}
+
+.team-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 10px;
+  border-bottom: var(--tile-border) 2px solid;
+}
+
+.room-row {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-start;
+  margin-bottom: 10px;
+  width: 262px;
+}
+.room {
+  width: 100%;
+  padding: 0.8em;
+  font-size: 1rem;
 }

@@ -513,57 +513,57 @@ function genCSVSchedule(teamRosters, rooms, eventName, division, tournament, doF
 }
 
 // Implement frontend to display the schedule using input
-document.addEventListener('DOMContentLoaded', () => {
-  // Add Team button functionality
-  document.getElementById('add-team').addEventListener('click', (e) => {
-    e.preventDefault();
-    const teamsDiv = document.querySelector('.teams');
-    const teamSection = document.createElement('div');
-    teamSection.className = 'team-section';
+// document.addEventListener('DOMContentLoaded', () => {
+//   // Add Team button functionality
+//   document.getElementById('add-team').addEventListener('click', (e) => {
+//     e.preventDefault();
+//     const teamsDiv = document.querySelector('.teams');
+//     const teamSection = document.createElement('div');
+//     teamSection.className = 'team-section';
     
-    const teamHeader = document.createElement('div');
-    teamHeader.className = 'team-header';
-    const teamNameInput = document.createElement('input');
-    teamNameInput.type = 'text';
-    teamNameInput.className = 'team-name';
-    teamNameInput.name = 'team-names';
-    teamNameInput.placeholder = 'Team Name';
-    teamNameInput.required = true;
-    teamHeader.appendChild(teamNameInput);
+//     const teamHeader = document.createElement('div');
+//     teamHeader.className = 'team-header';
+//     const teamNameInput = document.createElement('input');
+//     teamNameInput.type = 'text';
+//     teamNameInput.className = 'team-name';
+//     teamNameInput.name = 'team-names';
+//     teamNameInput.placeholder = 'Team Name';
+//     teamNameInput.required = true;
+//     teamHeader.appendChild(teamNameInput);
     
-    const teamMembers = document.createElement('div');
-    teamMembers.className = 'team-members';
-    for (let i = 1; i <= 5; i++) {
-      const memberInput = document.createElement('input');
-      memberInput.type = 'text';
-      memberInput.className = 'team-member';
-      memberInput.name = 'team-members';
-      memberInput.placeholder = `Team Member ${i}`;
-      teamMembers.appendChild(memberInput);
-    }
+//     const teamMembers = document.createElement('div');
+//     teamMembers.className = 'team-members';
+//     for (let i = 1; i <= 5; i++) {
+//       const memberInput = document.createElement('input');
+//       memberInput.type = 'text';
+//       memberInput.className = 'team-member';
+//       memberInput.name = 'team-members';
+//       memberInput.placeholder = `Team Member ${i}`;
+//       teamMembers.appendChild(memberInput);
+//     }
     
-    teamSection.appendChild(teamHeader);
-    teamSection.appendChild(teamMembers);
-    teamsDiv.appendChild(teamSection);
-  });
+//     teamSection.appendChild(teamHeader);
+//     teamSection.appendChild(teamMembers);
+//     teamsDiv.appendChild(teamSection);
+//   });
 
-document.getElementById('add-room').addEventListener('click', (e) => {
-  e.preventDefault();
-  const roomsDiv = document.querySelector('.rooms');
-  const roomRow = document.createElement('div');
-  roomRow.className = 'room-row';
-  roomRow.innerHTML = `
-    <input type="text" name="rooms" placeholder="Room Name" required="true">
-    <div class="room-slots">
-      <label class="switch">
-        <input type="checkbox" class="room-toggle" name="room-3team">
-        <span class="slider"></span>
-      </label>
-      <span class="toggle-label">3-Team Room</span>
-    </div>
-  `;
-  roomsDiv.appendChild(roomRow);
-});
+// document.getElementById('add-room').addEventListener('click', (e) => {
+//   e.preventDefault();
+//   const roomsDiv = document.querySelector('.rooms');
+//   const roomRow = document.createElement('div');
+//   roomRow.className = 'room-row';
+//   roomRow.innerHTML = `
+//     <input type="text" name="rooms" placeholder="Room Name" required="true">
+//     <div class="room-slots">
+//       <label class="switch">
+//         <input type="checkbox" class="room-toggle" name="room-3team">
+//         <span class="slider"></span>
+//       </label>
+//       <span class="toggle-label">3-Team Room</span>
+//     </div>
+//   `;
+//   roomsDiv.appendChild(roomRow);
+// });
 
   // Handle form submission
   document.querySelector('form').addEventListener('submit', (e) => {
@@ -681,7 +681,7 @@ document.getElementById('add-room').addEventListener('click', (e) => {
     // Add CSV download button
     addCSVDownload(schedule, rooms.map(r => r.name), teamRosters, rooms);
   });
-});
+// });
 
 function displaySchedule(schedule, rooms, finalsRounds = []) {
   // Remove old table if exists
@@ -798,3 +798,77 @@ function addCSVDownload(schedule, rooms, teamRosters, rooms) {
 
   csvDiv.appendChild(btn);
 }
+
+
+
+// Add remove buttons
+document.getElementById('add-team').addEventListener('click', (e) => {
+  e.preventDefault();
+  const teamsDiv = document.querySelector('.teams');
+  const teamSection = document.createElement('div');
+  teamSection.className = 'team-section';
+
+  const teamHeader = document.createElement('div');
+  teamHeader.className = 'team-header';
+  const teamNameInput = document.createElement('input');
+  teamNameInput.type = 'text';
+  teamNameInput.className = 'team-name';
+  teamNameInput.name = 'team-names';
+  teamNameInput.placeholder = 'Team Name';
+  teamNameInput.required = true;
+
+  // Remove button
+  const removeBtn = document.createElement('button');
+  removeBtn.type = 'button';
+  removeBtn.textContent = '✕';
+  removeBtn.title = 'Remove Team';
+  removeBtn.className = 'remove-team-btn';
+  removeBtn.addEventListener('click', () => {
+    teamSection.remove();
+  });
+
+  teamHeader.appendChild(teamNameInput);
+  teamHeader.appendChild(removeBtn);
+
+  const teamMembers = document.createElement('div');
+  teamMembers.className = 'team-members';
+  for (let i = 1; i <= 5; i++) {
+    const memberInput = document.createElement('input');
+    memberInput.type = 'text';
+    memberInput.className = 'team-member';
+    memberInput.name = 'team-members';
+    memberInput.placeholder = `Team Member ${i}`;
+    teamMembers.appendChild(memberInput);
+  }
+
+  teamSection.appendChild(teamHeader);
+  teamSection.appendChild(teamMembers);
+  teamsDiv.appendChild(teamSection);
+});
+
+
+
+document.getElementById('add-room').addEventListener('click', function(e) {
+  e.preventDefault();
+  const roomsDiv = document.querySelector('.rooms');
+  const roomRow = document.createElement('div');
+  roomRow.className = 'room-row';
+  roomRow.innerHTML = `
+    <div class="room-header">
+      <input type="text" class="room" name="rooms" placeholder="Room Name" required="true">
+      <button type="button" class="remove-room-btn" title="Remove Room">✕</button>
+    </div>
+      <div class="room-slots">
+      <label class="switch">
+        <input type="checkbox" class="room-toggle" name="room-3team">
+        <span class="slider"></span>
+      </label>
+      <span class="toggle-label">3-Team Room</span>
+    </div>
+  `;
+  // Add remove functionality
+  roomRow.querySelector('.remove-room-btn').addEventListener('click', function() {
+    roomRow.remove();
+  });
+  roomsDiv.appendChild(roomRow);
+});
